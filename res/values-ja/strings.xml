@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MemoPad</string>
+    <string name="menu_share">共有</string>
+    <string name="menu_clear">消去</string>
+</resources>

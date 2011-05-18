@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="color_name_list">
+        <item>赤</item>
+        <item>青</item>
+        <item>緑</item>
+        <item>黄</item>
+        <item>白</item>
+    </string-array>
+</resources>
