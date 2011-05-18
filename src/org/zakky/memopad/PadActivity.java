@@ -2,6 +2,7 @@
 package org.zakky.memopad;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BlurMaskFilter;
@@ -20,115 +21,136 @@ import android.widget.ImageView;
 
 public class PadActivity extends Activity {
 
-    private ImageView mCanvas;
-    private Bitmap mCanvasBitmap;
-    private final Paint mPaintForPen;
-
-    public PadActivity() {
-        mPaintForPen = new Paint();
-        mPaintForPen.setColor(Color.BLACK);
-        mPaintForPen.setAntiAlias(true);
-        mPaintForPen.setDither(true);
-        mPaintForPen.setColor(Color.BLACK);
-        mPaintForPen.setStyle(Paint.Style.STROKE);
-        mPaintForPen.setStrokeJoin(Paint.Join.ROUND);
-        mPaintForPen.setStrokeCap(Paint.Cap.ROUND);
-        mPaintForPen.setStrokeWidth(12.0F);
-
-        final MaskFilter blur = new BlurMaskFilter(1, BlurMaskFilter.Blur.NORMAL);
-        mPaintForPen.setMaskFilter(blur);
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.pad);
+        setContentView(new PaintView(this));
+    }
 
-        mCanvas = (ImageView) findViewById(R.id.canvas);
-        mCanvas.setOnTouchListener(new OnTouchListener() {
-            private final Path mPath = new Path();
-            private float mPrevX = Float.NaN;
-            private float mPrevY = Float.NaN;
-            private static final float TOUCH_TOLERANCE = 4;
+    private final class PaintView extends View {
 
-            private int mCount = 0;
+        /*
+         * for stroke
+         */
+        private static final float TOUCH_TOLERANCE = 4;
+        private final Paint mPaintForPen;
+        private final Path mPath;
+        private float mPrevX = Float.NaN;
+        private float mPrevY = Float.NaN;
 
-            {
-                clear();
-            }
+        /*
+         * for off-screen
+         */
+        private final Paint mOffScreenPaint;
+        private Bitmap mOffScreenBitmap;
+        private Canvas mOffScreenCanvas;
 
-            public boolean onTouch(View v, MotionEvent event) {
-                float currentX = event.getX();
-                float currentY = event.getY();
+        public PaintView(Context c) {
+            super(c);
 
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            mPaintForPen = new Paint();
+            mPaintForPen.setColor(Color.BLACK);
+            mPaintForPen.setAntiAlias(true);
+            mPaintForPen.setDither(true);
+            mPaintForPen.setColor(Color.BLACK);
+            mPaintForPen.setStyle(Paint.Style.STROKE);
+            mPaintForPen.setStrokeJoin(Paint.Join.ROUND);
+            mPaintForPen.setStrokeCap(Paint.Cap.ROUND);
+            mPaintForPen.setStrokeWidth(12.0F);
+
+//            final MaskFilter blur = new BlurMaskFilter(1, BlurMaskFilter.Blur.NORMAL);
+//            mPaintForPen.setMaskFilter(blur);
+
+            mOffScreenPaint = new Paint(Paint.DITHER_FLAG);
+            mOffScreenBitmap = null;
+            mOffScreenCanvas = null;
+
+            mPath = new Path();
+            clearPath();
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+
+            mOffScreenBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            mOffScreenCanvas = new Canvas(mOffScreenBitmap);
+            mOffScreenCanvas.drawARGB(0xff, 0xff, 0xff, 0);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+
+            canvas.drawColor(Color.LTGRAY);
+            canvas.drawBitmap(mOffScreenBitmap, 0.0F, 0.0F, mOffScreenPaint);
+            canvas.drawPath(mPath, mPaintForPen);
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            super.onTouchEvent(event);
+
+            float currentX = event.getX();
+            float currentY = event.getY();
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
                     handleTouchStart(currentX, currentY);
+                    invalidate();
                     return true;
-                } else if (event.getAction() != MotionEvent.ACTION_MOVE
-                        && event.getAction() != MotionEvent.ACTION_UP) {
-                    return false;
-                }
-
-                // 念のため前回の位置がない場合は DOWN として扱う
-                if (Float.isNaN(mPrevX) || Float.isNaN(mPrevY)) {
-                    handleTouchStart(currentX, currentY);
-                    return true;
-                }
-
-                final Canvas c;
-                if (mCanvasBitmap == null) {
-                    mCanvasBitmap = Bitmap.createBitmap(mCanvas.getWidth(), mCanvas.getHeight(),
-                            Config.ARGB_8888);
-                    c = new Canvas(mCanvasBitmap);
-                    c.drawRGB(0xff, 0xff, 0xff);
-                } else {
-                    c = new Canvas(mCanvasBitmap);
-                }
-
-                for (int i = 0; i < event.getHistorySize(); i++) {
-                    handleTouchMove(event.getHistoricalX(i), event.getHistoricalY(i));
-                }
-                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                case MotionEvent.ACTION_MOVE:
+                    assert !Float.isNaN(mPrevX) && !Float.isNaN(mPrevY);
+                    for (int i = 0; i < event.getHistorySize(); i++) {
+                        handleTouchMove(event.getHistoricalX(i), event.getHistoricalY(i));
+                    }
                     handleTouchMove(currentX, currentY);
-                } else {
+                    invalidate();
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    assert !Float.isNaN(mPrevX) && !Float.isNaN(mPrevY);
+                    for (int i = 0; i < event.getHistorySize(); i++) {
+                        handleTouchMove(event.getHistoricalX(i), event.getHistoricalY(i));
+                    }
                     handleTouchEnd(currentX, currentY);
-                }
-
-                c.drawPath(mPath, mPaintForPen);
-                mCanvas.setBackgroundDrawable(new BitmapDrawable(mCanvasBitmap));
-                mCount++;
-                Log.i("Pad", mCount + ": " + event.getHistorySize());
-
-                return true; // consumed!
+                    invalidate();
+                    return true;
+                default:
+                    return false;
             }
 
-            private void handleTouchStart(float x, float y) {
-                mPath.reset();
-                mPath.moveTo(x, y);
-                mPrevX = x;
-                mPrevY = y;
-            }
+        }
 
-            private void handleTouchMove(float x, float y) {
-                if (Math.abs(x - mPrevX) < TOUCH_TOLERANCE
-                        && Math.abs(y - mPrevY) < TOUCH_TOLERANCE) {
-                    return;
-                }
-                mPath.quadTo(mPrevX, mPrevY, (mPrevX + x) / 2, (mPrevY + y) / 2);
-                mPrevX = x;
-                mPrevY = y;
-            }
+        private void handleTouchStart(float x, float y) {
+            clearPath();
+            mPath.moveTo(x, y);
+            mPrevX = x;
+            mPrevY = y;
+        }
 
-            private void handleTouchEnd(float x, float y) {
-                mPath.lineTo(x, y);
-                clear();
+        private void handleTouchMove(float x, float y) {
+            if (Math.abs(x - mPrevX) < TOUCH_TOLERANCE
+                    && Math.abs(y - mPrevY) < TOUCH_TOLERANCE) {
+                return;
             }
+            mPath.quadTo(mPrevX, mPrevY, (mPrevX + x) / 2, (mPrevY + y) / 2);
+            mPrevX = x;
+            mPrevY = y;
+        }
 
-            private void clear() {
-                mPath.reset();
-                mPrevX = Float.NaN;
-                mPrevY = Float.NaN;
-            }
-        });
+        private void handleTouchEnd(float x, float y) {
+            mPath.lineTo(x, y);
+
+            // オフスクリーンにコミットしてパスをクリア
+            mOffScreenCanvas.drawPath(mPath, mPaintForPen);
+            clearPath();
+        }
+
+        private void clearPath() {
+            mPath.reset();
+            mPrevX = Float.NaN;
+            mPrevY = Float.NaN;
+        }
+
     }
 }
