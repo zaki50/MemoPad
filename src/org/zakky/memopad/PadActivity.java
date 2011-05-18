@@ -4,8 +4,10 @@ package org.zakky.memopad;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.MaskFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
@@ -32,6 +34,9 @@ public class PadActivity extends Activity {
         mPaintForPen.setStrokeJoin(Paint.Join.ROUND);
         mPaintForPen.setStrokeCap(Paint.Cap.ROUND);
         mPaintForPen.setStrokeWidth(12.0F);
+
+        final MaskFilter blur = new BlurMaskFilter(1, BlurMaskFilter.Blur.NORMAL);
+        mPaintForPen.setMaskFilter(blur);
     }
 
     @Override
