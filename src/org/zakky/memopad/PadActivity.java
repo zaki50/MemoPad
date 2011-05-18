@@ -73,10 +73,8 @@ public class PadActivity extends Activity {
                 final Canvas c;
                 if (mCanvasBitmap == null) {
                     mCanvasBitmap = Bitmap.createBitmap(mCanvas.getWidth(), mCanvas.getHeight(),
-                            Config.ARGB_4444);
+                            Config.ARGB_8888);
                     c = new Canvas(mCanvasBitmap);
-                    final Paint paint = new Paint();
-                    paint.setColor(Color.WHITE);
                     c.drawRGB(0xff, 0xff, 0xff);
                 } else {
                     c = new Canvas(mCanvasBitmap);
