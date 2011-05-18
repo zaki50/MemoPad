@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="color_name_list">
+    <string-array name="color_label_list">
         <item>Red</item>
         <item>Blue</item>
         <item>Green</item>

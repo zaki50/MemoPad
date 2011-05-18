@@ -3,4 +3,7 @@
     <string name="app_name">MemoPad</string>
     <string name="menu_share">Share</string>
     <string name="menu_clear">Clear</string>
+
+    <string name="pen_color">Pen</string>
+    <string name="bg_color">BG</string>
 </resources>

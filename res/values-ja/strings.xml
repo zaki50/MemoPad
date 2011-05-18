@@ -3,4 +3,7 @@
     <string name="app_name">MemoPad</string>
     <string name="menu_share">共有</string>
     <string name="menu_clear">消去</string>
+
+    <string name="pen_color">ペン</string>
+    <string name="bg_color">背景色</string>
 </resources>

@@ -1,10 +1,9 @@
 
 package org.zakky.memopad;
 
-import android.app.ActionBar;
-import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
@@ -17,11 +16,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ArrayAdapter;
 
 public class PadActivity extends Activity {
 
     private PaintView mPaintView;
+    private String[] mColorLabels;
     private int[] mColorValues;
 
     @Override
@@ -30,23 +29,16 @@ public class PadActivity extends Activity {
         mPaintView = new PaintView(this);
         setContentView(mPaintView);
 
-        mColorValues = getResources().getIntArray(R.array.color_value_list);
+        final Resources resources = getResources();
+        mColorLabels = resources.getStringArray(R.array.color_label_list);
+        mColorValues = resources.getIntArray(R.array.color_value_list);
+
+        // １つ目の色をデフォルトの背景色として選択
+        mPaintView.setBackgroundColor(mColorValues[0]);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        ActionBar actionBar = getActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-        final ArrayAdapter<CharSequence> colors = ArrayAdapter.createFromResource(this,
-                R.array.color_name_list, android.R.layout.simple_spinner_dropdown_item);
-        actionBar.setListNavigationCallbacks(colors, new OnNavigationListener() {
-            public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-                final int colorValue = mColorValues[itemPosition];
-                mPaintView.setBackgroundColor(colorValue);
-                return true;
-            }
-        });
-
         getMenuInflater().inflate(R.menu.pad, menu);
         return super.onCreateOptionsMenu(menu);
     }
