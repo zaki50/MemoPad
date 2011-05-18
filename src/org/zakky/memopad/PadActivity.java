@@ -7,6 +7,7 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +20,19 @@ public class PadActivity extends Activity {
 
     private ImageView mCanvas;
     private Bitmap mCanvasBitmap;
+    private final Paint mPaintForPen;
+
+    public PadActivity() {
+        mPaintForPen = new Paint();
+        mPaintForPen.setColor(Color.BLACK);
+        mPaintForPen.setAntiAlias(true);
+        mPaintForPen.setDither(true);
+        mPaintForPen.setColor(Color.BLACK);
+        mPaintForPen.setStyle(Paint.Style.STROKE);
+        mPaintForPen.setStrokeJoin(Paint.Join.ROUND);
+        mPaintForPen.setStrokeCap(Paint.Cap.ROUND);
+        mPaintForPen.setStrokeWidth(12.0F);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -27,8 +41,10 @@ public class PadActivity extends Activity {
 
         mCanvas = (ImageView) findViewById(R.id.canvas);
         mCanvas.setOnTouchListener(new OnTouchListener() {
-            private float mPrevX;
-            private float mPrevY;
+            private final Path mPath = new Path();
+            private float mPrevX = Float.NaN;
+            private float mPrevY = Float.NaN;
+            private static final float TOUCH_TOLERANCE = 4;
 
             private int mCount = 0;
 
@@ -41,20 +57,16 @@ public class PadActivity extends Activity {
                 float currentY = event.getY();
 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    mPrevX = currentX;
-                    mPrevY = currentY;
+                    handleTouchStart(currentX, currentY);
                     return true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    clear();
-                    return true;
-                } else if (event.getAction() != MotionEvent.ACTION_MOVE) {
+                } else if (event.getAction() != MotionEvent.ACTION_MOVE
+                        && event.getAction() != MotionEvent.ACTION_UP) {
                     return false;
                 }
 
                 // 念のため前回の位置がない場合は DOWN として扱う
                 if (Float.isNaN(mPrevX) || Float.isNaN(mPrevY)) {
-                    mPrevX = currentX;
-                    mPrevY = currentY;
+                    handleTouchStart(currentX, currentY);
                     return true;
                 }
 
@@ -63,35 +75,54 @@ public class PadActivity extends Activity {
                     mCanvasBitmap = Bitmap.createBitmap(mCanvas.getWidth(), mCanvas.getHeight(),
                             Config.ARGB_4444);
                     c = new Canvas(mCanvasBitmap);
-                    final Paint paint;
-                    paint = new Paint();
+                    final Paint paint = new Paint();
                     paint.setColor(Color.WHITE);
                     c.drawRGB(0xff, 0xff, 0xff);
                 } else {
                     c = new Canvas(mCanvasBitmap);
                 }
 
-                final Paint paint = new Paint();
-                paint.setColor(Color.BLACK);
-                paint.setStrokeWidth(4.0f);
-                paint.setAntiAlias(true);
                 for (int i = 0; i < event.getHistorySize(); i++) {
-                    c.drawLine(mPrevX, mPrevY, event.getHistoricalX(i), event.getHistoricalY(i),
-                            paint);
-                    mPrevX = event.getHistoricalX(i);
-                    mPrevY = event.getHistoricalY(i);
+                    handleTouchMove(event.getHistoricalX(i), event.getHistoricalY(i));
+                }
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    handleTouchMove(currentX, currentY);
+                } else {
+                    handleTouchEnd(currentX, currentY);
                 }
 
-                c.drawLine(mPrevX, mPrevY, currentX, currentY, paint);
-                mPrevX = currentX;
-                mPrevY = currentY;
+                c.drawPath(mPath, mPaintForPen);
                 mCanvas.setBackgroundDrawable(new BitmapDrawable(mCanvasBitmap));
                 mCount++;
                 Log.i("Pad", mCount + ": " + event.getHistorySize());
+
                 return true; // consumed!
             }
 
+            private void handleTouchStart(float x, float y) {
+                mPath.reset();
+                mPath.moveTo(x, y);
+                mPrevX = x;
+                mPrevY = y;
+            }
+
+            private void handleTouchMove(float x, float y) {
+                if (Math.abs(x - mPrevX) < TOUCH_TOLERANCE
+                        && Math.abs(y - mPrevY) < TOUCH_TOLERANCE) {
+                    return;
+                }
+                mPath.quadTo(mPrevX, mPrevY, (mPrevX + x) / 2, (mPrevY + y) / 2);
+                mPrevX = x;
+                mPrevY = y;
+            }
+
+            private void handleTouchEnd(float x, float y) {
+                mPath.lineTo(x, y);
+                clear();
+            }
+
             private void clear() {
+                mPath.reset();
                 mPrevX = Float.NaN;
                 mPrevY = Float.NaN;
             }
