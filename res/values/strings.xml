@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, PadActivity!</string>
     <string name="app_name">MemoPad</string>
+    <string name="menu_share">Share</string>
+    <string name="menu_clear">Clear</string>
 </resources>

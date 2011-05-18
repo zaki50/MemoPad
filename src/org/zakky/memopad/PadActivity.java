@@ -1,30 +1,65 @@
 
 package org.zakky.memopad;
 
+import android.app.ActionBar;
+import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.MaskFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
-import android.widget.ImageView;
+import android.widget.ArrayAdapter;
 
 public class PadActivity extends Activity {
+
+    private PaintView mPaintView;
+    private int[] mColorValues;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(new PaintView(this));
+        mPaintView = new PaintView(this);
+        setContentView(mPaintView);
+
+        mColorValues = getResources().getIntArray(R.array.color_value_list);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        ActionBar actionBar = getActionBar();
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+        final ArrayAdapter<CharSequence> colors = ArrayAdapter.createFromResource(this,
+                R.array.color_name_list, android.R.layout.simple_spinner_dropdown_item);
+        actionBar.setListNavigationCallbacks(colors, new OnNavigationListener() {
+            public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+                final int colorValue = mColorValues[itemPosition];
+                mPaintView.setBackgroundColor(colorValue);
+                return true;
+            }
+        });
+
+        getMenuInflater().inflate(R.menu.pad, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        switch (item.getItemId()) {
+            /* 消去メニュー */
+            case R.id.menu_clear:
+                mPaintView.clearCanvas();
+                return true;
+        }
+        return super.onMenuItemSelected(featureId, item);
     }
 
     private final class PaintView extends View {
@@ -58,8 +93,9 @@ public class PadActivity extends Activity {
             mPaintForPen.setStrokeCap(Paint.Cap.ROUND);
             mPaintForPen.setStrokeWidth(12.0F);
 
-//            final MaskFilter blur = new BlurMaskFilter(1, BlurMaskFilter.Blur.NORMAL);
-//            mPaintForPen.setMaskFilter(blur);
+            final MaskFilter blur = new BlurMaskFilter(1,
+                    BlurMaskFilter.Blur.NORMAL);
+            mPaintForPen.setMaskFilter(blur);
 
             mOffScreenPaint = new Paint(Paint.DITHER_FLAG);
             mOffScreenBitmap = null;
@@ -75,14 +111,12 @@ public class PadActivity extends Activity {
 
             mOffScreenBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             mOffScreenCanvas = new Canvas(mOffScreenBitmap);
-            mOffScreenCanvas.drawARGB(0xff, 0xff, 0xff, 0);
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
 
-            canvas.drawColor(Color.LTGRAY);
             canvas.drawBitmap(mOffScreenBitmap, 0.0F, 0.0F, mOffScreenPaint);
             canvas.drawPath(mPath, mPaintForPen);
         }
@@ -119,6 +153,17 @@ public class PadActivity extends Activity {
                     return false;
             }
 
+        }
+
+        public void clearCanvas() {
+            final int w = mOffScreenBitmap.getWidth();
+            final int h = mOffScreenBitmap.getHeight();
+            mOffScreenBitmap.recycle();
+
+            mOffScreenBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            mOffScreenCanvas = new Canvas(mOffScreenBitmap);
+            clearPath();
+            invalidate();
         }
 
         private void handleTouchStart(float x, float y) {
