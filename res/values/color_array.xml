@@ -9,17 +9,17 @@
         <item>0xffffffff</item>
     </integer-array>
     <string-array name="bg_color_label_list">
+        <item>Yellow</item>
+        <item>White</item>
         <item>Red</item>
         <item>Blue</item>
         <item>Green</item>
-        <item>Yellow</item>
-        <item>White</item>
     </string-array>
     <integer-array name="bg_color_value_list">
+        <item>0xffffff00</item>
+        <item>0xffffffff</item>
         <item>0xffff0000</item>
         <item>0xff0000ff</item>
         <item>0xff00ff00</item>
-        <item>0xffffff00</item>
-        <item>0xffffffff</item>
     </integer-array>
 </resources>
