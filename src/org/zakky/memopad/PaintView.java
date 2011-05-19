@@ -127,6 +127,8 @@ public class PaintView extends View {
     private void handleTouchStart(float x, float y) {
         clearPath();
         mPath.moveTo(x, y);
+        // タッチしただけで点が描かれるようにとりあえず１ドット線をひく
+        mPath.lineTo(x + 1, y);
         mPrevX = x;
         mPrevY = y;
     }
