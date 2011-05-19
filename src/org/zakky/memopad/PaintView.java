@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.zakky.memopad;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -27,6 +30,8 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Images.Media;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -40,10 +45,9 @@ import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 /**
- * お絵かき用の {@link View} です。
- * 
- * {@link View} がもともと持っている背景色、commit されたストローク用のオフスクリーンビットマップ、
- * 現在描いている途中のストロークを別々に保持し、描画時に({@link #onDraw(Canvas)}で)合成します。
+ * お絵かき用の {@link View} です。 {@link View} がもともと持っている背景色、commit
+ * されたストローク用のオフスクリーンビットマップ、 現在描いている途中のストロークを別々に保持し、描画時に({@link #onDraw(Canvas)}
+ * で)合成します。
  */
 public class PaintView extends View {
 
@@ -206,6 +210,7 @@ public class PaintView extends View {
                     Log.e(TAG, "failed to create image file: " + imageFile.getPath());
                     return null;
                 }
+                updateMediaDatabase(imageFile);
                 return Uri.fromFile(imageFile);
             } finally {
                 bitmap.recycle();
@@ -294,4 +299,19 @@ public class PaintView extends View {
             return null;
         }
     }
+
+    /**
+     * 画像ファイルがギャラリーに表示されるようにするため、データベースに追加します。
+     * 
+     * @param imageFile イメージファイル。
+     */
+    private void updateMediaDatabase(File imageFile) {
+        final ContentValues values = new ContentValues();
+        ContentResolver contentResolver = getContext().getContentResolver();
+        values.put(Images.Media.MIME_TYPE, "image/jpeg");
+        values.put(Images.Media.TITLE, imageFile.getName());
+        values.put("_data", imageFile.getAbsolutePath());
+        contentResolver.insert(Media.EXTERNAL_CONTENT_URI, values);
+    }
+
 }
