@@ -19,6 +19,7 @@ public class PaintView extends View {
      * for stroke
      */
     private static final float TOUCH_TOLERANCE = 4;
+    private static final int DEFAULT_PEN_COLOR = Color.BLACK;
     private final Paint mPaintForPen;
     private final Path mPath;
     private float mPrevX = Float.NaN;
@@ -38,7 +39,7 @@ public class PaintView extends View {
         mPaintForPen.setColor(Color.BLACK);
         mPaintForPen.setAntiAlias(true);
         mPaintForPen.setDither(true);
-        mPaintForPen.setColor(Color.BLACK);
+        mPaintForPen.setColor(DEFAULT_PEN_COLOR);
         mPaintForPen.setStyle(Paint.Style.STROKE);
         mPaintForPen.setStrokeJoin(Paint.Join.ROUND);
         mPaintForPen.setStrokeCap(Paint.Cap.ROUND);
@@ -59,7 +60,6 @@ public class PaintView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-
         mOffScreenBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mOffScreenCanvas = new Canvas(mOffScreenBitmap);
     }
@@ -67,7 +67,6 @@ public class PaintView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
         canvas.drawBitmap(mOffScreenBitmap, 0.0F, 0.0F, mOffScreenPaint);
         canvas.drawPath(mPath, mPaintForPen);
     }
@@ -103,7 +102,15 @@ public class PaintView extends View {
             default:
                 return false;
         }
+    }
 
+    public void setPenColor(int argb) {
+        mPaintForPen.setColor(argb);
+    }
+
+    @Override
+    public void setBackgroundColor(int argb) {
+        super.setBackgroundColor(argb);
     }
 
     public void clearCanvas() {
