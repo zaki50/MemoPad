@@ -2,11 +2,14 @@
 package org.zakky.memopad;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 public class PadActivity extends Activity {
 
@@ -101,6 +104,18 @@ public class PadActivity extends Activity {
         mBgColorMenuItem.setTitle(mBgColorMenuLabelBase + mBgColorLabels[mBgColorIndex]);
     }
 
+    private void shareImage() {
+        final Uri imageFile = mPaintView.saveImageAsPng();
+        if (imageFile == null) {
+            Toast.makeText(this, R.string.failed_to_save_image, Toast.LENGTH_LONG).show();
+            return;
+        }
+        final Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("image/png");
+        intent.putExtra(Intent.EXTRA_STREAM, imageFile);
+        startActivity(intent);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.pad, menu);
@@ -121,6 +136,9 @@ public class PadActivity extends Activity {
                 return true;
             case R.id.menu_bg_color: /* 背景色メニュー */
                 setNextBgColor();
+                return true;
+            case R.id.menu_share: /* 共有メニュー */
+                shareImage();
                 return true;
             case R.id.menu_clear: /* 消去メニュー */
                 mPaintView.clearCanvas();

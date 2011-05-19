@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MemoPad</string>
     <string name="menu_share">共有</string>
     <string name="menu_clear">消去</string>
 
     <string name="pen_color">ペン: </string>
-    <string name="bg_color">背景色: </string>
+    <string name="bg_color">背景: </string>
+
+    <string name="failed_to_save_image">画像が保存できませんでした。</string>
 </resources>

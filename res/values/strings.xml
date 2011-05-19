@@ -6,4 +6,6 @@
 
     <string name="pen_color">Pen: </string>
     <string name="bg_color">BG: </string>
+
+    <string name="failed_to_save_image">Failed to save image.</string>
 </resources>

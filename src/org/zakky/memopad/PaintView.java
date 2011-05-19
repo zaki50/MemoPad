@@ -3,17 +3,31 @@ package org.zakky.memopad;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Bitmap.Config;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.MaskFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.net.Uri;
+import android.os.Environment;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.concurrent.TimeUnit;
+
 public class PaintView extends View {
+
+    private static final String TAG = PaintView.class.getSimpleName();
 
     /*
      * for stroke
@@ -31,6 +45,7 @@ public class PaintView extends View {
     private final Paint mOffScreenPaint;
     private Bitmap mOffScreenBitmap;
     private Canvas mOffScreenCanvas;
+    private int mBgColor;
 
     public PaintView(Context c, AttributeSet attrs) {
         super(c, attrs);
@@ -110,6 +125,7 @@ public class PaintView extends View {
 
     @Override
     public void setBackgroundColor(int argb) {
+        mBgColor = argb;
         super.setBackgroundColor(argb);
     }
 
@@ -157,4 +173,81 @@ public class PaintView extends View {
         mPrevY = Float.NaN;
     }
 
+    private File prepareImageBaseDir() {
+        final String appName = getResources().getString(R.string.app_name);
+        final File baseDir = new File(Environment.getExternalStorageDirectory(), appName);
+        if (!baseDir.exists()) {
+            baseDir.mkdirs();
+        }
+        if (!baseDir.isDirectory()) {
+            Log.e(TAG, "not a directory: " + baseDir.getPath());
+            return null;
+        }
+        return baseDir;
+    }
+
+    private File createImageFileForNew(File baseDir, String extention) {
+        boolean interrupted = false;
+        File imageFile = null;
+        do {
+            if (imageFile != null) {
+                // ２回目以降は少し待つ
+                try {
+                    TimeUnit.MILLISECONDS.sleep(10L);
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                }
+            }
+            imageFile = new File(baseDir, "image-" + System.currentTimeMillis() + "." + extention);
+        } while (imageFile.exists());
+
+        if (interrupted) {
+            Thread.currentThread().interrupt();
+        }
+        return imageFile;
+    }
+
+    private FileOutputStream openImageFile(File f) {
+        try {
+            return new FileOutputStream(f);
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "failed to create image file: " + f.getPath(), e);
+            return null;
+        }
+    }
+
+    public Uri saveImageAsPng() {
+        final File baseDir = prepareImageBaseDir();
+        if (baseDir == null) {
+            return null;
+        }
+        final File imageFile = createImageFileForNew(baseDir, "png");
+        final OutputStream os = openImageFile(imageFile);
+        if (os == null) {
+            return null;
+        }
+        try {
+            final Bitmap bitmap = Bitmap.createBitmap(mOffScreenBitmap.getWidth(),
+                    mOffScreenBitmap.getHeight(), Config.ARGB_8888);
+            try {
+                bitmap.eraseColor(mBgColor);
+                final Canvas canvas = new Canvas(bitmap);
+                canvas.drawBitmap(mOffScreenBitmap, 0.0f, 0.0f, mOffScreenPaint);
+                if (!bitmap.compress(CompressFormat.PNG, 100, os)) {
+                    Log.e(TAG, "failed to create image file: " + imageFile.getPath());
+                    return null;
+                }
+                return Uri.fromFile(imageFile);
+            } finally {
+                bitmap.recycle();
+            }
+        } finally {
+            try {
+                os.close();
+            } catch (IOException e) {
+                Log.e(TAG, "failed to create image file: " + imageFile.getPath());
+                return null;
+            }
+        }
+    }
 }
