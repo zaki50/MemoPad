@@ -27,6 +27,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * お絵かき用の {@link View} です。
+ * 
+ * {@link View} がもともと持っている背景色、commit されたストローク用のオフスクリーンビットマップ、
+ * 現在描いている途中のストロークを別々に保持し、描画時に({@link #onDraw(Canvas)}で)合成します。
  */
 public class PaintView extends View {
 
@@ -158,12 +161,7 @@ public class PaintView extends View {
      * すべてのストロークを消去します。
      */
     public void clearCanvas() {
-        final int w = mOffScreenBitmap.getWidth();
-        final int h = mOffScreenBitmap.getHeight();
-        mOffScreenBitmap.recycle();
-
-        mOffScreenBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        mOffScreenCanvas = new Canvas(mOffScreenBitmap);
+        mOffScreenBitmap.eraseColor(0); // 透明に戻す
         clearPath();
         invalidate();
     }
@@ -229,7 +227,6 @@ public class PaintView extends View {
 
     private void handleTouchEnd(float x, float y) {
         mPath.lineTo(x, y);
-
         // オフスクリーンにコミットしてパスをクリア
         mOffScreenCanvas.drawPath(mPath, mPaintForPen);
         clearPath();
