@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * お絵かき用の {@link View} です。
+ */
 public class PaintView extends View {
 
     private static final String TAG = PaintView.class.getSimpleName();
@@ -45,6 +48,9 @@ public class PaintView extends View {
     private final Paint mOffScreenPaint;
     private Bitmap mOffScreenBitmap;
     private Canvas mOffScreenCanvas;
+    /**
+     * 背景色(AARRGGBB)
+     */
     private int mBgColor;
 
     public PaintView(Context c, AttributeSet attrs) {
@@ -79,6 +85,10 @@ public class PaintView extends View {
         mOffScreenCanvas = new Canvas(mOffScreenBitmap);
     }
 
+    /**
+     * {@link View} の中身を描画します。親クラスで描画した背景の上にコミット済みのストローク画像を コピーし、最後に
+     * {@link #mPath} が保持する未コミットのストロークを描画します。
+     */
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -95,40 +105,58 @@ public class PaintView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                // 現在の座標から描画開始
                 handleTouchStart(currentX, currentY);
-                invalidate();
+                invalidate(); // 面倒なので View 全体を再描画要求
                 return true;
             case MotionEvent.ACTION_MOVE:
                 assert !Float.isNaN(mPrevX) && !Float.isNaN(mPrevY);
                 for (int i = 0; i < event.getHistorySize(); i++) {
+                    // 未処理の move イベントを反映させる。
                     handleTouchMove(event.getHistoricalX(i), event.getHistoricalY(i));
                 }
+                // 現在の座標を move として反映する。
                 handleTouchMove(currentX, currentY);
-                invalidate();
+                invalidate(); // 面倒なので View 全体を再描画要求
                 return true;
             case MotionEvent.ACTION_UP:
                 assert !Float.isNaN(mPrevX) && !Float.isNaN(mPrevY);
                 for (int i = 0; i < event.getHistorySize(); i++) {
+                    // 未処理の move イベントを反映させる。
                     handleTouchMove(event.getHistoricalX(i), event.getHistoricalY(i));
                 }
+                // 現在の座標をストローク完了として反映する。
                 handleTouchEnd(currentX, currentY);
-                invalidate();
+                invalidate(); // 面倒なので View 全体を再描画要求
                 return true;
             default:
                 return false;
         }
     }
 
+    /**
+     * ペンの色をセットします。
+     * 
+     * @param argb ペンの色(AARRGGBB)。
+     */
     public void setPenColor(int argb) {
         mPaintForPen.setColor(argb);
     }
 
+    /**
+     * 背景色をセットします。
+     * 
+     * @param argb 背景色(AARRGGBB)。
+     */
     @Override
     public void setBackgroundColor(int argb) {
         mBgColor = argb;
         super.setBackgroundColor(argb);
     }
 
+    /**
+     * すべてのストロークを消去します。
+     */
     public void clearCanvas() {
         final int w = mOffScreenBitmap.getWidth();
         final int h = mOffScreenBitmap.getHeight();
@@ -138,6 +166,46 @@ public class PaintView extends View {
         mOffScreenCanvas = new Canvas(mOffScreenBitmap);
         clearPath();
         invalidate();
+    }
+
+    /**
+     * 現在の画像を PNG ファイルとして書き出し、書きだしたファイルを {@link Uri} で返します。
+     * 
+     * @return 書きだしたファイルの Uri。書き出しが正常に行えなかった場合は {@code null} を返します。
+     */
+    public Uri saveImageAsPng() {
+        final File baseDir = prepareImageBaseDir();
+        if (baseDir == null) {
+            return null;
+        }
+        final File imageFile = createImageFileForNew(baseDir, "png");
+        final OutputStream os = openImageFile(imageFile);
+        if (os == null) {
+            return null;
+        }
+        try {
+            final Bitmap bitmap = Bitmap.createBitmap(mOffScreenBitmap.getWidth(),
+                    mOffScreenBitmap.getHeight(), Config.ARGB_8888);
+            try {
+                bitmap.eraseColor(mBgColor);
+                final Canvas canvas = new Canvas(bitmap);
+                canvas.drawBitmap(mOffScreenBitmap, 0.0f, 0.0f, mOffScreenPaint);
+                if (!bitmap.compress(CompressFormat.PNG, 100, os)) {
+                    Log.e(TAG, "failed to create image file: " + imageFile.getPath());
+                    return null;
+                }
+                return Uri.fromFile(imageFile);
+            } finally {
+                bitmap.recycle();
+            }
+        } finally {
+            try {
+                os.close();
+            } catch (IOException e) {
+                Log.e(TAG, "failed to create image file: " + imageFile.getPath());
+                return null;
+            }
+        }
     }
 
     private void handleTouchStart(float x, float y) {
@@ -213,41 +281,6 @@ public class PaintView extends View {
         } catch (FileNotFoundException e) {
             Log.e(TAG, "failed to create image file: " + f.getPath(), e);
             return null;
-        }
-    }
-
-    public Uri saveImageAsPng() {
-        final File baseDir = prepareImageBaseDir();
-        if (baseDir == null) {
-            return null;
-        }
-        final File imageFile = createImageFileForNew(baseDir, "png");
-        final OutputStream os = openImageFile(imageFile);
-        if (os == null) {
-            return null;
-        }
-        try {
-            final Bitmap bitmap = Bitmap.createBitmap(mOffScreenBitmap.getWidth(),
-                    mOffScreenBitmap.getHeight(), Config.ARGB_8888);
-            try {
-                bitmap.eraseColor(mBgColor);
-                final Canvas canvas = new Canvas(bitmap);
-                canvas.drawBitmap(mOffScreenBitmap, 0.0f, 0.0f, mOffScreenPaint);
-                if (!bitmap.compress(CompressFormat.PNG, 100, os)) {
-                    Log.e(TAG, "failed to create image file: " + imageFile.getPath());
-                    return null;
-                }
-                return Uri.fromFile(imageFile);
-            } finally {
-                bitmap.recycle();
-            }
-        } finally {
-            try {
-                os.close();
-            } catch (IOException e) {
-                Log.e(TAG, "failed to create image file: " + imageFile.getPath());
-                return null;
-            }
         }
     }
 }
