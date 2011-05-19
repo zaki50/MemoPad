@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.zakky.memopad;
 
 import android.app.Activity;
@@ -101,11 +102,17 @@ public class PadActivity extends Activity {
 
         mPaintView = (PaintView) findViewById(R.id.canvas);
         /*
-         * １つ目の色をデフォルトの色として選択。
-         * メニューラベル更新の都合があるので、反映は #onStart() で行います。
+         * １つ目の色をデフォルトの色として選択。 メニューラベル更新の都合があるので、反映は #onStart() で行います。
          */
         mPenColorIndex = 0;
         mBgColorIndex = 0;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        setPenColor();
+        setBgColor();
     }
 
     @Override
@@ -171,7 +178,9 @@ public class PadActivity extends Activity {
      */
     private void setPenColor() {
         mPaintView.setPenColor(mPenColorValues[mPenColorIndex]);
-        mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[mPenColorIndex]);
+        if (mPenColorMenuItem != null) {
+            mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[mPenColorIndex]);
+        }
     }
 
     /**
@@ -179,12 +188,13 @@ public class PadActivity extends Activity {
      */
     private void setBgColor() {
         mPaintView.setBackgroundColor(mBgColorValues[mBgColorIndex]);
-        mBgColorMenuItem.setTitle(mBgColorMenuLabelBase + mBgColorLabels[mBgColorIndex]);
+        if (mBgColorMenuItem != null) {
+            mBgColorMenuItem.setTitle(mBgColorMenuLabelBase + mBgColorLabels[mBgColorIndex]);
+        }
     }
 
     /**
-     * 現在の画像をファイルに保存し、 {@link Intent#ACTION_SEND ACTION_SEND} なインテントを
-     * 飛ばします。
+     * 現在の画像をファイルに保存し、 {@link Intent#ACTION_SEND ACTION_SEND} なインテントを 飛ばします。
      */
     private void shareImage() {
         final Uri imageFile = mPaintView.saveImageAsPng();
