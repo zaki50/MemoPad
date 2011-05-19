@@ -11,6 +11,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+/**
+ * お絵かき用のアクティビティです。
+ */
 public class PadActivity extends Activity {
 
     /**
@@ -27,7 +30,7 @@ public class PadActivity extends Activity {
      */
     private MenuItem mPenColorMenuItem;
     /**
-     * ペンカラーのメニューラベルのベース部分
+     * ペンカラーのメニューラベルのベース部分。後ろに現在のペンカラーを表す文字列を連結して使用します。
      */
     private CharSequence mPenColorMenuLabelBase;
     /**
@@ -35,7 +38,7 @@ public class PadActivity extends Activity {
      */
     private MenuItem mBgColorMenuItem;
     /**
-     * 背景色のメニューラベルのベース部分
+     * 背景色のメニューラベルのベース部分。後ろに現在の背景色を表す文字列を連結して使用します。
      */
     private CharSequence mBgColorMenuLabelBase;
 
@@ -71,60 +74,44 @@ public class PadActivity extends Activity {
         setContentView(R.layout.main);
 
         final Resources resources = getResources();
+        /*
+         * ペンの色一覧
+         */
         mPenColorLabels = resources.getStringArray(R.array.pen_color_label_list);
         mPenColorValues = resources.getIntArray(R.array.pen_color_value_list);
+        /*
+         * 背景色一覧
+         */
         mBgColorLabels = resources.getStringArray(R.array.bg_color_label_list);
         mBgColorValues = resources.getIntArray(R.array.bg_color_value_list);
 
-        // １つ目の色をデフォルトの背景色として選択
         mPaintView = (PaintView) findViewById(R.id.canvas);
+        /*
+         * １つ目の色をデフォルトの色として選択。
+         * メニューラベル更新の都合があるので、反映は #onStart() で行います。
+         */
         mPenColorIndex = 0;
         mBgColorIndex = 0;
-    }
-
-    private void setNextPenColor() {
-        mPenColorIndex++;
-        mPenColorIndex %= mPenColorValues.length;
-        setPenColor();
-    }
-
-    private void setNextBgColor() {
-        mBgColorIndex++;
-        mBgColorIndex %= mBgColorValues.length;
-        setBgColor();
-    }
-
-    private void setPenColor() {
-        mPaintView.setPenColor(mPenColorValues[mPenColorIndex]);
-        mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[mPenColorIndex]);
-    }
-
-    private void setBgColor() {
-        mPaintView.setBackgroundColor(mBgColorValues[mBgColorIndex]);
-        mBgColorMenuItem.setTitle(mBgColorMenuLabelBase + mBgColorLabels[mBgColorIndex]);
-    }
-
-    private void shareImage() {
-        final Uri imageFile = mPaintView.saveImageAsPng();
-        if (imageFile == null) {
-            Toast.makeText(this, R.string.failed_to_save_image, Toast.LENGTH_LONG).show();
-            return;
-        }
-        final Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("image/png");
-        intent.putExtra(Intent.EXTRA_STREAM, imageFile);
-        startActivity(intent);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.pad, menu);
+
+        /*
+         * ペンカラー変更メニュー項目
+         */
         mPenColorMenuItem = menu.findItem(R.id.menu_pen_color);
         mPenColorMenuLabelBase = mPenColorMenuItem.getTitle();
         setPenColor();
+
+        /*
+         * 背景色変更メニュー項目
+         */
         mBgColorMenuItem = menu.findItem(R.id.menu_bg_color);
         mBgColorMenuLabelBase = mBgColorMenuItem.getTitle();
         setBgColor();
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -145,6 +132,56 @@ public class PadActivity extends Activity {
                 return true;
         }
         return super.onMenuItemSelected(featureId, item);
+    }
+
+    /**
+     * ペンの色を、次の色に変更します。
+     */
+    private void setNextPenColor() {
+        mPenColorIndex++;
+        mPenColorIndex %= mPenColorValues.length;
+        setPenColor();
+    }
+
+    /**
+     * 背景の色を次の色に変更します。
+     */
+    private void setNextBgColor() {
+        mBgColorIndex++;
+        mBgColorIndex %= mBgColorValues.length;
+        setBgColor();
+    }
+
+    /**
+     * {@link #mPenColorIndex} が示すペンカラーを反映させます。
+     */
+    private void setPenColor() {
+        mPaintView.setPenColor(mPenColorValues[mPenColorIndex]);
+        mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[mPenColorIndex]);
+    }
+
+    /**
+     * {@link #mBgColorIndex} が示す背景色を反映させます。
+     */
+    private void setBgColor() {
+        mPaintView.setBackgroundColor(mBgColorValues[mBgColorIndex]);
+        mBgColorMenuItem.setTitle(mBgColorMenuLabelBase + mBgColorLabels[mBgColorIndex]);
+    }
+
+    /**
+     * 現在の画像をファイルに保存し、 {@link Intent#ACTION_SEND ACTION_SEND} なインテントを
+     * 飛ばします。
+     */
+    private void shareImage() {
+        final Uri imageFile = mPaintView.saveImageAsPng();
+        if (imageFile == null) {
+            Toast.makeText(this, R.string.failed_to_save_image, Toast.LENGTH_LONG).show();
+            return;
+        }
+        final Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("image/png");
+        intent.putExtra(Intent.EXTRA_STREAM, imageFile);
+        startActivity(intent);
     }
 
 }
