@@ -22,10 +22,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
-import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.MaskFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.net.Uri;
@@ -86,10 +84,6 @@ public class PaintView extends View {
         mPaintForPen.setStrokeJoin(Paint.Join.ROUND);
         mPaintForPen.setStrokeCap(Paint.Cap.ROUND);
         mPaintForPen.setStrokeWidth(12.0F);
-
-        final MaskFilter blur = new BlurMaskFilter(1,
-                BlurMaskFilter.Blur.NORMAL);
-        mPaintForPen.setMaskFilter(blur);
 
         mOffScreenPaint = new Paint(Paint.DITHER_FLAG);
         mOffScreenBitmap = null;
