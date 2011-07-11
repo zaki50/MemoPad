@@ -51,22 +51,60 @@ public class PaintView extends View {
 
     private static final String TAG = PaintView.class.getSimpleName();
 
+    /**
+     * サポートする最大のポインタ数。
+     */
+    private static final int MAX_POINTERS = 20;
+
     /*
      * for stroke
      */
     private static final float TOUCH_TOLERANCE = 4;
+
     private static final int DEFAULT_PEN_COLOR = Color.BLACK;
+
     private final Paint mPaintForPen;
-    private final Path mPath;
-    private float mPrevX = Float.NaN;
-    private float mPrevY = Float.NaN;
+
+    private int mCurrentMaxPointerCount = 0;
+
+    /**
+     * パスの配列。
+     *
+     * <p>
+     * 配列の長さは {@link #MAX_POINTERS} で初期化されます。
+     * PointerId を配列のインデックスとして使用します。ストローク中の Pointer は
+     * {@code non-null}, ストロークが無いときは {@code null} です。
+     * </p>
+     */
+    private final Path[] mPath;
+
+    /**
+     * 各ポインタの前回の X 座標の値。ベジェ曲線を作成する際に使用します。
+     *
+     * <p>
+     * 配列の長さは {@link #MAX_POINTERS} で初期化されます。
+     * </p>
+     */
+    private float[] mPrevX;
+
+    /**
+     * 各ポインタの前回の Y 座標の値。ベジェ曲線を作成する際に使用します。
+     *
+     * <p>
+     * 配列の長さは {@link #MAX_POINTERS} で初期化されます。
+     * </p>
+     */
+    private float[] mPrevY;
 
     /*
      * for off-screen
      */
     private final Paint mOffScreenPaint;
+
     private Bitmap mOffScreenBitmap;
+
     private Canvas mOffScreenCanvas;
+
     /**
      * 背景色(AARRGGBB)
      */
@@ -89,8 +127,10 @@ public class PaintView extends View {
         mOffScreenBitmap = null;
         mOffScreenCanvas = null;
 
-        mPath = new Path();
-        clearPath();
+        mPath = new Path[MAX_POINTERS];
+        mPrevX = new float[MAX_POINTERS];
+        mPrevY = new float[MAX_POINTERS];
+        clearAllPaths();
     }
 
     @Override
@@ -108,45 +148,68 @@ public class PaintView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawBitmap(mOffScreenBitmap, 0.0F, 0.0F, mOffScreenPaint);
-        canvas.drawPath(mPath, mPaintForPen);
+        for (int i = 0; i < mCurrentMaxPointerCount; i++) {
+            final Path path = mPath[i];
+            if (path == null) {
+                continue;
+            }
+            canvas.drawPath(path, mPaintForPen);
+        }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         super.onTouchEvent(event);
 
-        float currentX = event.getX();
-        float currentY = event.getY();
+        final int pointerCount = event.getPointerCount();
+        for (int pIndex = 0; pIndex < pointerCount; pIndex++) {
 
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                // 現在の座標から描画開始
-                handleTouchStart(currentX, currentY);
-                invalidate(); // 面倒なので View 全体を再描画要求
+            float currentX = event.getX(pIndex);
+            float currentY = event.getY(pIndex);
+
+            final int pointerId = event.getPointerId(pIndex);
+            if (MAX_POINTERS <= pointerId) {
+                Log.i(TAG, "too many pointers(PointerId = " + pointerId + ").");
                 return true;
-            case MotionEvent.ACTION_MOVE:
-                assert !Float.isNaN(mPrevX) && !Float.isNaN(mPrevY);
-                for (int i = 0; i < event.getHistorySize(); i++) {
-                    // 未処理の move イベントを反映させる。
-                    handleTouchMove(event.getHistoricalX(i), event.getHistoricalY(i));
-                }
-                // 現在の座標を move として反映する。
-                handleTouchMove(currentX, currentY);
-                invalidate(); // 面倒なので View 全体を再描画要求
-                return true;
-            case MotionEvent.ACTION_UP:
-                assert !Float.isNaN(mPrevX) && !Float.isNaN(mPrevY);
-                for (int i = 0; i < event.getHistorySize(); i++) {
-                    // 未処理の move イベントを反映させる。
-                    handleTouchMove(event.getHistoricalX(i), event.getHistoricalY(i));
-                }
-                // 現在の座標をストローク完了として反映する。
-                handleTouchEnd(currentX, currentY);
-                invalidate(); // 面倒なので View 全体を再描画要求
-                return true;
-            default:
-                return false;
+            }
+            mCurrentMaxPointerCount = Math.max(mCurrentMaxPointerCount, pointerId + 1);
+
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    if (event.getActionIndex() != pIndex) {
+                        continue;
+                    }
+                    // 現在の座標から描画開始
+                    handleTouchStart(currentX, currentY, pointerId);
+                    invalidate(); // 面倒なので View 全体を再描画要求
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    assert !Float.isNaN(mPrevX[pointerId]) && !Float.isNaN(mPrevY[pointerId]);
+                    for (int i = 0; i < event.getHistorySize(); i++) {
+                        // 未処理の move イベントを反映させる。
+                        handleTouchMove(event.getHistoricalX(pIndex, i),
+                                event.getHistoricalY(pIndex, i), pointerId);
+                    }
+                    // 現在の座標を move として反映する。
+                    handleTouchMove(currentX, currentY, pointerId);
+                    invalidate(); // 面倒なので View 全体を再描画要求
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP:
+                    if (event.getActionIndex() != pIndex) {
+                        continue;
+                    }
+                    assert !Float.isNaN(mPrevX[pointerId]) && !Float.isNaN(mPrevY[pointerId]);
+                    // 現在の座標をストローク完了として反映する。
+                    handleTouchEnd(currentX, currentY, pointerId);
+                    invalidate(); // 面倒なので View 全体を再描画要求
+                    break;
+                default:
+                    return false;
+            }
         }
+        return true;
     }
 
     /**
@@ -174,7 +237,7 @@ public class PaintView extends View {
      */
     public void clearCanvas() {
         mOffScreenBitmap.eraseColor(0); // 透明に戻す
-        clearPath();
+        clearAllPaths();
         invalidate();
     }
 
@@ -219,36 +282,57 @@ public class PaintView extends View {
         }
     }
 
-    private void handleTouchStart(float x, float y) {
-        clearPath();
-        mPath.moveTo(x, y);
+    private void handleTouchStart(float x, float y, int pointerId) {
+        preparePath(pointerId);
+        assert mPath[pointerId] != null;
+        mPath[pointerId].moveTo(x, y);
         // タッチしただけで点が描かれるようにとりあえず１ドット線をひく
-        mPath.lineTo(x + 1, y);
-        mPrevX = x;
-        mPrevY = y;
+        mPath[pointerId].lineTo(x + 1, y);
+        mPrevX[pointerId] = x;
+        mPrevY[pointerId] = y;
     }
 
-    private void handleTouchMove(float x, float y) {
-        if (Math.abs(x - mPrevX) < TOUCH_TOLERANCE
-                && Math.abs(y - mPrevY) < TOUCH_TOLERANCE) {
+    private void handleTouchMove(float x, float y, int pointerId) {
+        final float prevX = mPrevX[pointerId];
+        final float prevY = mPrevY[pointerId];
+        if (Math.abs(x - prevX) < TOUCH_TOLERANCE && Math.abs(y - prevY) < TOUCH_TOLERANCE) {
             return;
         }
-        mPath.quadTo(mPrevX, mPrevY, (mPrevX + x) / 2, (mPrevY + y) / 2);
-        mPrevX = x;
-        mPrevY = y;
+        mPath[pointerId].quadTo(prevX, prevY, (prevX + x) / 2, (prevY + y) / 2);
+        mPrevX[pointerId] = x;
+        mPrevY[pointerId] = y;
     }
 
-    private void handleTouchEnd(float x, float y) {
-        mPath.lineTo(x, y);
+    private void handleTouchEnd(float x, float y, int pointerId) {
+        if (mPath[pointerId] == null) {
+            return;
+        }
+        mPath[pointerId].lineTo(x, y);
         // オフスクリーンにコミットしてパスをクリア
-        mOffScreenCanvas.drawPath(mPath, mPaintForPen);
-        clearPath();
+        mOffScreenCanvas.drawPath(mPath[pointerId], mPaintForPen);
+
+        mPath[pointerId].close();
+        mPath[pointerId] = null;
     }
 
-    private void clearPath() {
-        mPath.reset();
-        mPrevX = Float.NaN;
-        mPrevY = Float.NaN;
+    private void clearAllPaths() {
+        for (int i = 0; i < MAX_POINTERS; i++) {
+            if (mPath[i] != null) {
+                mPath[i].close();
+            }
+            mPath[i] = null;
+            mPrevX[i] = Float.NaN;
+            mPrevY[i] = Float.NaN;
+        }
+    }
+
+    private void preparePath(int pointerId) {
+        if (mPath[pointerId] == null) {
+            mPath[pointerId] = new Path();
+        }
+        mPath[pointerId].reset();
+        mPrevX[pointerId] = Float.NaN;
+        mPrevY[pointerId] = Float.NaN;
     }
 
     private File prepareImageBaseDir() {
