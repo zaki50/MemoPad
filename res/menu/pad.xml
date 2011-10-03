@@ -4,6 +4,9 @@
     <item android:title="@string/pen_color"
           android:showAsAction="ifRoom|withText"
           android:id="@+id/menu_pen_color"/>
+    <item android:title=""
+          android:showAsAction="ifRoom"
+          android:id="@+id/menu_pen_size"/>
     <item android:title="@string/bg_color"
           android:showAsAction="ifRoom|withText"
           android:id="@+id/menu_bg_color"/>

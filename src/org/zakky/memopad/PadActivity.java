@@ -19,6 +19,13 @@ package org.zakky.memopad;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
@@ -45,6 +52,10 @@ public class PadActivity extends Activity {
      */
     private MenuItem mPenColorMenuItem;
     /**
+     * ペンサイズ変更用のメニューアイテム
+     */
+    private MenuItem mPenSizeMenuItem;
+    /**
      * ペンカラーのメニューラベルのベース部分。後ろに現在のペンカラーを表す文字列を連結して使用します。
      */
     private CharSequence mPenColorMenuLabelBase;
@@ -66,6 +77,14 @@ public class PadActivity extends Activity {
      */
     private int[] mPenColorValues;
     /**
+     * 選択可能なペンサイズを表現するアイコン。
+     */
+    private Drawable[] mPenSizeImages;
+    /**
+     * 選択可能なペンサイズの値。
+     */
+    private float[] mPenSizeValues;
+    /**
      * 選択可能な色のラベル配列
      */
     private String[] mBgColorLabels;
@@ -75,9 +94,13 @@ public class PadActivity extends Activity {
     private int[] mBgColorValues;
 
     /**
-     * 現在のペンカラーのインデックス。{@code mBgColorLabels} と {@code mBgColorValues}用。
+     * 現在のペンカラーのインデックス。{@code mPecColorLabels} と {@code mPenColorValues}用。
      */
     private int mPenColorIndex;
+    /**
+     * 現在のペンサイズのインデックス。{@code mPenSizeImages} と {@code mPenSizeValues}用。
+     */
+    private int mPenSizeIndex;
     /**
      * 現在の背景色のインデックス。{@code mBgColorLabels} と {@code mBgColorValues}用。
      */
@@ -95,6 +118,12 @@ public class PadActivity extends Activity {
         mPenColorLabels = resources.getStringArray(R.array.pen_color_label_list);
         mPenColorValues = resources.getIntArray(R.array.pen_color_value_list);
         /*
+         * ペンの太さ一覧
+         */
+        mPenSizeValues = toFloatArray(resources.getIntArray(R.array.pen_size_value_list));
+        mPenSizeImages = buildPenSizeDrawables(mPenSizeValues);
+
+        /*
          * 背景色一覧
          */
         mBgColorLabels = resources.getStringArray(R.array.bg_color_label_list);
@@ -105,6 +134,7 @@ public class PadActivity extends Activity {
          * １つ目の色をデフォルトの色として選択。 メニューラベル更新の都合があるので、反映は #onStart() で行います。
          */
         mPenColorIndex = 0;
+        mPenSizeIndex = 0;
         mBgColorIndex = 0;
     }
 
@@ -127,6 +157,12 @@ public class PadActivity extends Activity {
         setPenColor();
 
         /*
+         * ペンサイズ変更メニュー項目
+         */
+        mPenSizeMenuItem = menu.findItem(R.id.menu_pen_size);
+        setPenSize();
+
+        /*
          * 背景色変更メニュー項目
          */
         mBgColorMenuItem = menu.findItem(R.id.menu_bg_color);
@@ -142,6 +178,9 @@ public class PadActivity extends Activity {
             case R.id.menu_pen_color: /* ペン色メニュー */
                 setNextPenColor();
                 return true;
+            case R.id.menu_pen_size: /* ペンサイズメニュー */
+                setNextPenSize();
+                return true;
             case R.id.menu_bg_color: /* 背景色メニュー */
                 setNextBgColor();
                 return true;
@@ -155,6 +194,29 @@ public class PadActivity extends Activity {
         return super.onMenuItemSelected(featureId, item);
     }
 
+    private Drawable[] buildPenSizeDrawables(float[] sizeArray) {
+        final BitmapDrawable[] result = new BitmapDrawable[sizeArray.length];
+        final int width = 30;
+        final int height = 30;
+        final Paint paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.FILL);
+//        paint.setStrokeJoin(Paint.Join.ROUND);
+//        paint.setStrokeCap(Paint.Cap.ROUND);
+//        paint.setStrokeWidth(12.0F);
+        for (int i = 0; i < sizeArray.length; i++) {
+            final float size = sizeArray[i];
+            final Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_4444);
+            final Canvas c = new Canvas(bitmap);
+            c.drawCircle(width / 2, height / 2, size == 0.0 ? 1.0f : size / 2, paint);
+            final BitmapDrawable drawable = new BitmapDrawable(bitmap);
+            result[i] = drawable;
+        }
+        return result;
+    }
+
     /**
      * ペンの色を、次の色に変更します。
      */
@@ -162,6 +224,15 @@ public class PadActivity extends Activity {
         mPenColorIndex++;
         mPenColorIndex %= mPenColorValues.length;
         setPenColor();
+    }
+
+    /**
+     * ペンのサイズを、次のサイズに変更します。
+     */
+    private void setNextPenSize() {
+        mPenSizeIndex++;
+        mPenSizeIndex %= mPenSizeValues.length;
+        setPenSize();
     }
 
     /**
@@ -180,6 +251,16 @@ public class PadActivity extends Activity {
         mPaintView.setPenColor(mPenColorValues[mPenColorIndex]);
         if (mPenColorMenuItem != null) {
             mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[mPenColorIndex]);
+        }
+    }
+
+    /**
+     * {@link #mPenSizeIndex} が示すペンサイズを反映させます。
+     */
+    private void setPenSize() {
+        mPaintView.setPenSize(mPenSizeValues[mPenSizeIndex]);
+        if (mPenSizeMenuItem != null) {
+            mPenSizeMenuItem.setIcon(mPenSizeImages[mPenSizeIndex]);
         }
     }
 
@@ -208,4 +289,15 @@ public class PadActivity extends Activity {
         startActivity(intent);
     }
 
+    private static float[] toFloatArray(int[] intArray) {
+        if (intArray == null) {
+            return null;
+        }
+        final float[] result = new float[intArray.length];
+        for (int i = 0; i < intArray.length; i++) {
+            final int value = intArray[i];
+            result[i] = (float) value;
+        }
+        return result;
+    }
 }

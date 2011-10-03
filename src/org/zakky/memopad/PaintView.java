@@ -222,6 +222,15 @@ public class PaintView extends View {
     }
 
     /**
+     * ペンのサイズをセットします。
+     *
+     * @param size ペンのサイズ。
+     */
+    public void setPenSize(float size) {
+        mPaintForPen.setStrokeWidth(size);
+    }
+
+    /**
      * 背景色をセットします。
      * 
      * @param argb 背景色(AARRGGBB)。
