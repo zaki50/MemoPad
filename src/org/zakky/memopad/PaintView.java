@@ -136,6 +136,9 @@ public class PaintView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        if (w <= 0 || h <= 0) {
+            return;
+        }
         mOffScreenBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mOffScreenCanvas = new Canvas(mOffScreenBitmap);
     }
