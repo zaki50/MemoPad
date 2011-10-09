@@ -61,7 +61,7 @@ public class PaintView extends View {
     /*
      * for stroke
      */
-    private static final float TOUCH_TOLERANCE = 4;
+    private static final float TOUCH_TOLERANCE = 2;
 
     private static final int DEFAULT_PEN_COLOR = Color.BLACK;
 
