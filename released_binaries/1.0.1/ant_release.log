@@ -64,9 +64,9 @@ compile:
 release:
      [echo] Signing final apk...
   [signjar] Signing JAR: /Users/zaki/fromgit/MemoPad/bin/PadActivity-unsigned.apk to /Users/zaki/fromgit/MemoPad/bin/PadActivity-unaligned.apk as android_app_release
-  [signjar] 繧ｭ繝ｼ繧ｹ繝医い縺ｮ繝代せ繝ｯ繝ｼ繝峨ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞: 
+  [signjar] キーストアのパスワードを入力してください: 
      [echo] Running zip align on final apk...
      [echo] Release Package: /Users/zaki/fromgit/MemoPad/bin/PadActivity-release.apk
 
 BUILD SUCCESSFUL
-Total time: 25 seconds
+Total time: 13 seconds
