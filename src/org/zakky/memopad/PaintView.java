@@ -133,14 +133,22 @@ public class PaintView extends View {
         clearAllPaths();
     }
 
+    public Bitmap getBitmap() {
+        return mOffScreenBitmap;
+    }
+
+    public void setBitmap(Bitmap bmp) {
+        mOffScreenBitmap = bmp;
+        mOffScreenCanvas = new Canvas(mOffScreenBitmap);
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        if (w <= 0 || h <= 0) {
+        if (w <= 0 || h <= 0 || mOffScreenBitmap != null) {
             return;
         }
-        mOffScreenBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        mOffScreenCanvas = new Canvas(mOffScreenBitmap);
+        setBitmap(Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888));
     }
 
     /**

@@ -2,6 +2,7 @@
 package org.zakky.memopad;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -17,6 +18,8 @@ public class CanvasFragment extends Fragment {
     private PaintView mPaintView;
 
     private CanvasListener mCanvasListener;
+
+    private Bitmap mSavedBitmap;
 
     /**
      * 現在のペンカラーのインデックス。{@code mPecColorLabels} と {@code mPenColorValues}用。
@@ -46,12 +49,17 @@ public class CanvasFragment extends Fragment {
         final View view = inflater.inflate(R.layout.main, null);
         mPaintView = (PaintView) view.findViewById(R.id.canvas);
 
-        /*
-         * １つ目の色をデフォルトの色として選択。 メニューラベル更新の都合があるので、反映は #onStart() で行います。
-         */
-        mPenColorIndex = 0;
-        mPenSizeIndex = 0;
-        mBgColorIndex = 0;
+        if (mSavedBitmap == null) {
+            /*
+             * １つ目の色をデフォルトの色として選択。 メニューラベル更新の都合があるので、反映は #onStart() で行います。
+             */
+            mPenColorIndex = 0;
+            mPenSizeIndex = 0;
+            mBgColorIndex = 0;
+        } else {
+            mPaintView.setBitmap(mSavedBitmap);
+            mSavedBitmap = null;
+        }
 
         return view;
     }
@@ -60,6 +68,12 @@ public class CanvasFragment extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         mCanvasListener = (CanvasListener) activity;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mSavedBitmap = mPaintView.getBitmap();
     }
 
     /**
@@ -120,6 +134,10 @@ public class CanvasFragment extends Fragment {
         }
         final int bgArgb = mCanvasListener.bgColorChanged(mBgColorIndex);
         mPaintView.setBackgroundColor(bgArgb);
+    }
+
+    public void invalidate() {
+        mPaintView.invalidate();
     }
 
     public Uri saveImageAsPng() {

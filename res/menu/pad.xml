@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="スワップ"
+          android:showAsAction="always|withText"
+          android:id="@+id/menu_swap"/>
     <item android:title=""
-          android:showAsAction="ifRoom"
+          android:showAsAction="always"
           android:id="@+id/menu_pen_size"/>
     <!-- 色設定 -->
     <item android:title="@string/pen_color"
-          android:showAsAction="ifRoom|withText"
+          android:showAsAction="always|withText"
           android:id="@+id/menu_pen_color"/>
     <item android:title="@string/bg_color"
-          android:showAsAction="ifRoom|withText"
+          android:showAsAction="always|withText"
           android:id="@+id/menu_bg_color"/>
 
     <item android:title="@string/menu_share"
           android:icon="@android:drawable/ic_menu_share"
-          android:showAsAction="ifRoom|withText"
+          android:showAsAction="always|withText"
           android:id="@+id/menu_share"/>
     <item android:title="@string/menu_clear"
           android:icon="@android:drawable/ic_menu_delete"
-          android:showAsAction="ifRoom|withText"
+          android:showAsAction="always|withText"
           android:id="@+id/menu_clear"/>
 </menu>

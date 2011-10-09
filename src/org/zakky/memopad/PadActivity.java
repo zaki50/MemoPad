@@ -42,6 +42,8 @@ import android.widget.Toast;
  */
 public class PadActivity extends FragmentActivity implements CanvasListener {
 
+    private static final String FG_TAG_CANVAS = "canvas";
+
     private CanvasFragment[] mCanvases;
 
     /*
@@ -124,11 +126,11 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         final FragmentManager fm = getSupportFragmentManager();
         final FragmentTransaction tx = fm.beginTransaction();
         try {
-            final Fragment old = fm.findFragmentByTag("canvas");
+            final Fragment old = fm.findFragmentByTag(FG_TAG_CANVAS);
             if (old != null) {
                 tx.remove(old);
             }
-            tx.add(R.id.container, getCurrentCanvas(), "canvas");
+            tx.add(R.id.container, getCurrentCanvas(), FG_TAG_CANVAS);
         } finally {
             tx.commit();
         }
@@ -193,11 +195,14 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_pen_color: /* ペン色メニュー */
-                getCurrentCanvas().setNextPenColor(mPenColorValues.length);
+            case R.id.menu_swap: /* SWAPメニュー */
+                swapCanvas();
                 return true;
             case R.id.menu_pen_size: /* ペンサイズメニュー */
                 getCurrentCanvas().setNextPenSize(mPenSizeValues.length);
+                return true;
+            case R.id.menu_pen_color: /* ペン色メニュー */
+                getCurrentCanvas().setNextPenColor(mPenColorValues.length);
                 return true;
             case R.id.menu_bg_color: /* 背景色メニュー */
                 getCurrentCanvas().setNextBgColor(mBgColorValues.length);
@@ -208,12 +213,34 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
             case R.id.menu_clear: /* 消去メニュー */
                 clearCanvas();
                 return true;
+            default:
+                return super.onMenuItemSelected(featureId, item);
         }
-        return super.onMenuItemSelected(featureId, item);
     }
 
     private CanvasFragment getCurrentCanvas() {
         return mCanvases[0];
+    }
+
+    private void swapCanvas() {
+        final FragmentTransaction tx = getSupportFragmentManager().beginTransaction();
+        try {
+            tx.replace(R.id.container, mCanvases[1], FG_TAG_CANVAS);
+            tx.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+
+            final CanvasFragment prevCurrent = mCanvases[0];
+            mCanvases[0] = mCanvases[1];
+            mCanvases[1] = prevCurrent;
+        } finally {
+            tx.commit();
+        }
+        getSupportFragmentManager().executePendingTransactions();
+
+        final CanvasFragment currentCanvas = getCurrentCanvas();
+        currentCanvas.applyPenColor();
+        currentCanvas.applyPenSize();
+        currentCanvas.applyBgColor();
+        currentCanvas.invalidate();
     }
 
     private Drawable[] buildPenSizeDrawables(float[] sizeArray) {
