@@ -16,6 +16,8 @@
 
 package org.zakky.memopad;
 
+import static android.view.MotionEvent.ACTION_POINTER_INDEX_MASK;
+import static android.view.MotionEvent.ACTION_POINTER_INDEX_SHIFT;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -185,10 +187,10 @@ public class PaintView extends View {
             }
             mCurrentMaxPointerCount = Math.max(mCurrentMaxPointerCount, pointerId + 1);
 
-            switch (event.getActionMasked()) {
+            switch (getActionMasked(event)) {
                 case MotionEvent.ACTION_DOWN:
                 case MotionEvent.ACTION_POINTER_DOWN:
-                    if (event.getActionIndex() != pIndex) {
+                    if (getActionIndex(event) != pIndex) {
                         continue;
                     }
                     // 現在の座標から描画開始
@@ -208,7 +210,7 @@ public class PaintView extends View {
                     break;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_POINTER_UP:
-                    if (event.getActionIndex() != pIndex) {
+                    if (getActionIndex(event) != pIndex) {
                         continue;
                     }
                     assert !Float.isNaN(mPrevX[pointerId]) && !Float.isNaN(mPrevY[pointerId]);
@@ -221,6 +223,34 @@ public class PaintView extends View {
             }
         }
         return true;
+    }
+
+    /**
+     * {@link MotionEvent} からアクションの種別を取得します。
+     *
+     * API Level 8 以降では {@code event.getActionMasked()} が使用できるが、
+     * API Level 7 に対応するため独自に実装しています。
+     * @param event モーションイベント。
+     * @return マスクされたアクション。
+     */
+    private static int getActionMasked(MotionEvent event) {
+        final int action = event.getAction();
+        final int masked = action & MotionEvent.ACTION_MASK;
+        return masked;
+    }
+
+    /**
+     * {@link MotionEvent} から ポインタのインデックスを取得します。
+     *
+     * API Level 8 以降では {@code event.getActionIndex()} が使用できるが、
+     * API Level 7 に対応するため独自に実装しています。
+     * @param event モーションイベント。
+     * @return インデックスの値。
+     */
+    private static int getActionIndex(MotionEvent event) {
+        final int action = event.getAction();
+        final int index = (action & ACTION_POINTER_INDEX_MASK) >> ACTION_POINTER_INDEX_SHIFT;
+        return index;
     }
 
     /**
