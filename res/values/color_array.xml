@@ -27,21 +27,21 @@
         <item>0</item>
     </integer-array>
     <string-array name="bg_color_label_list">
-        <item>Yellow</item>
-        <item>Black</item>
         <item>White</item>
         <item>Red</item>
         <item>Green</item>
         <item>Blue</item>
         <item>Andy</item>
+        <item>Yellow</item>
+        <item>Black</item>
     </string-array>
     <integer-array name="bg_color_value_list">
-        <item>0xffffff00</item>
-        <item>0xff000000</item>
         <item>0xffffffff</item>
         <item>0xffff0000</item>
         <item>0xff00ff00</item>
         <item>0xff0000ff</item>
         <item>0xffa4c639</item>
+        <item>0xffffff00</item>
+        <item>0xff000000</item>
     </integer-array>
 </resources>
