@@ -8,4 +8,7 @@
     <string name="bg_color">BG: </string>
 
     <string name="failed_to_save_image">Failed to save image.</string>
+
+    <string name="dialog_description">Draw as you like!</string>
+    <string name="show_this_dialog_at_startup">Show this dialog at startup</string>
 </resources>

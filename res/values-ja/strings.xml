@@ -7,4 +7,7 @@
     <string name="bg_color">背景: </string>
 
     <string name="failed_to_save_image">画像が保存できませんでした。</string>
+
+    <string name="dialog_description">自由に絵や文字を描いてください。\n↓はyanzm画伯著の見本です。</string>
+    <string name="show_this_dialog_at_startup">次回起動時にもこのダイアログを表示する</string>
 </resources>

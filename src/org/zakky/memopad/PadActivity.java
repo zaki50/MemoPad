@@ -133,6 +133,10 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
             tx.commit();
         }
 
+        if (MyDialogFragment.showAtStartup(this)) {
+            new MyDialogFragment().show(fm.beginTransaction(), "dialog");
+        }
+
         final Resources resources = getResources();
         /*
          * ペンの色一覧
