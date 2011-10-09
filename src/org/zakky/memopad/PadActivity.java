@@ -17,6 +17,8 @@
 package org.zakky.memopad;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -105,7 +107,7 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Object saved  = getLastNonConfigurationInstance();
+        final Object saved = getLastNonConfigurationInstance();
         if (saved != null) {
             mCanvases = (CanvasFragment[]) saved;
         } else {
@@ -114,6 +116,8 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
                 mCanvases[i] = new CanvasFragment();
             }
         }
+
+        fixOrientation();
 
         setContentView(R.layout.placeholder);
 
@@ -281,6 +285,17 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
 
     private void clearCanvas() {
         getCurrentCanvas().clearCanvas();
+    }
+
+    private void fixOrientation() {
+        final Configuration config = getResources().getConfiguration();
+        if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            // TODO SCREEN_ORIENTATION_REVERSE_PORTRAIT の判定
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        } else {
+            // TODO SCREEN_ORIENTATION_REVERSE_LADSCAPE の判定
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }
     }
 
     private static float[] toFloatArray(int[] intArray) {
