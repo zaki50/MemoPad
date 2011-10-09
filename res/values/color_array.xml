@@ -20,9 +20,7 @@
     </integer-array>
     <integer-array name="pen_size_value_list">
         <item>12</item>
-        <item>10</item>
         <item>8</item>
-        <item>6</item>
         <item>4</item>
         <item>0</item>
     </integer-array>
