@@ -1,0 +1,72 @@
+Buildfile: /Users/zaki/fromgit/MemoPad/build.xml
+    [setup] Android SDK Tools Revision 13
+    [setup] Project Target: Android 3.0
+    [setup] API level: 11
+    [setup] 
+    [setup] ------------------
+    [setup] Resolving library dependencies:
+    [setup] No library dependencies.
+    [setup] 
+    [setup] ------------------
+    [setup] 
+    [setup] WARNING: Attribute minSdkVersion in AndroidManifest.xml (7) is lower than the project target API level (11)
+    [setup] 
+    [setup] Importing rules file: tools/ant/main_rules.xml
+
+-set-release-mode:
+
+-release-obfuscation-check:
+
+-pre-build:
+
+-dirs:
+     [echo] Creating output directories if needed...
+    [mkdir] Created dir: /Users/zaki/fromgit/MemoPad/bin
+    [mkdir] Created dir: /Users/zaki/fromgit/MemoPad/gen
+    [mkdir] Created dir: /Users/zaki/fromgit/MemoPad/bin/classes
+
+-aidl:
+     [echo] Compiling aidl files into Java classes...
+
+-renderscript:
+     [echo] Compiling RenderScript files into Java classes and RenderScript bytecode...
+
+-resource-src:
+     [echo] Generating R.java / Manifest.java from the resources...
+
+-pre-compile:
+
+compile:
+    [javac] /Applications/android-sdk-mac_x86/tools/ant/main_rules.xml:385: warning: 'includeantruntime' was not set, defaulting to build.sysclasspath=last; set to false for repeatable builds
+    [javac] Compiling 5 source files to /Users/zaki/fromgit/MemoPad/bin/classes
+
+-post-compile:
+
+-obfuscate:
+
+-dex:
+     [echo] Converting compiled files and external libraries into /Users/zaki/fromgit/MemoPad/bin/classes.dex...
+
+-package-resources:
+     [echo] Packaging resources
+     [aapt] Creating full resource package...
+     [aapt]     (skipping hidden file '/Users/zaki/fromgit/MemoPad/assets/.gitignore')
+
+-package-release:
+[apkbuilder] Creating PadActivity-unsigned.apk for release...
+
+-release-prompt-for-password:
+    [input] Please enter keystore password (store:/Users/zaki/.android/release.keystore):
+    [input] Please enter password for alias 'android_app_release':
+
+-release-nosign:
+
+release:
+     [echo] Signing final apk...
+  [signjar] Signing JAR: /Users/zaki/fromgit/MemoPad/bin/PadActivity-unsigned.apk to /Users/zaki/fromgit/MemoPad/bin/PadActivity-unaligned.apk as android_app_release
+  [signjar] キーストアのパスワードを入力してください: 
+     [echo] Running zip align on final apk...
+     [echo] Release Package: /Users/zaki/fromgit/MemoPad/bin/PadActivity-release.apk
+
+BUILD SUCCESSFUL
+Total time: 13 seconds
