@@ -109,14 +109,9 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Object saved = getLastNonConfigurationInstance();
-        if (saved != null) {
-            mCanvases = (CanvasFragment[]) saved;
-        } else {
-            mCanvases = new CanvasFragment[2];
-            for (int i = 0; i < mCanvases.length; i++) {
-                mCanvases[i] = new CanvasFragment();
-            }
+        mCanvases = new CanvasFragment[2];
+        for (int i = 0; i < mCanvases.length; i++) {
+            mCanvases[i] = new CanvasFragment();
         }
 
         fixOrientation();
