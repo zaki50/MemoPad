@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.net.Uri;
 
@@ -60,7 +61,7 @@ public class MediaUtils {
 	 * @return
 	 */
 	public static Bitmap resizeBitmapForSmartTag(Bitmap src) {
-		return resizeBitamp(src, 200, 96);
+		return resizeBitamp(src, 200, 96, true);
 	}
 
 	/**
@@ -71,7 +72,8 @@ public class MediaUtils {
 	 * @param height
 	 * @return
 	 */
-	public static Bitmap resizeBitamp(Bitmap src, int width, int height) {
+	public static Bitmap resizeBitamp(Bitmap src, int width, int height,
+			boolean autoRotate) {
 
 		int srcWidth = src.getWidth(); // 元画像のwidth
 		int srcHeight = src.getHeight(); // 元画像のheight
@@ -87,12 +89,18 @@ public class MediaUtils {
 			matrix.postScale(widthScale, widthScale);
 		}
 
-		// リサイズ
-		Bitmap dst = Bitmap.createBitmap(src, 0, 0, srcWidth, srcHeight,
-				matrix, true);
+		// 回転
+		if (autoRotate && (srcHeight > srcWidth && width > height)
+				|| (srcWidth > srcHeight && height > width)) {
+			matrix.postRotate(90);
+		}
 
-		src = null;
-		return dst;
+		// リサイズ
+		Bitmap result = Bitmap.createBitmap(width, height, null);
+		Canvas canvas = new Canvas(result);
+		canvas.drawBitmap(src, matrix, null);
+
+		return result;
 	}
 
 }

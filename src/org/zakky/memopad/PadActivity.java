@@ -16,17 +16,13 @@
 
 package org.zakky.memopad;
 
+import org.zakky.memopad.BgConfigActionProvider.OnBgConfigChangedListener;
+import org.zakky.memopad.PenConfigActionProvider.OnPenConfigChangedListener;
+
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -53,17 +49,7 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     /**
      * ペンカラー変更用のメニューアイテム
      */
-    private MenuItem mPenColorMenuItem;
-
-    /**
-     * ペンサイズ変更用のメニューアイテム
-     */
-    private MenuItem mPenSizeMenuItem;
-
-    /**
-     * ペンカラーのメニューラベルのベース部分。後ろに現在のペンカラーを表す文字列を連結して使用します。
-     */
-    private CharSequence mPenColorMenuLabelBase;
+    // private MenuItem mPenColorMenuItem;
 
     /**
      * 背景色変更用のメニューアイテム
@@ -76,24 +62,14 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     private CharSequence mBgColorMenuLabelBase;
 
     /**
-     * 選択可能な色のラベル配列
-     */
-    private String[] mPenColorLabels;
-
-    /**
      * 選択可能な色の値。 {@code mPenColorLabels} と、インデックスで対応づけされる。
      */
     private int[] mPenColorValues;
 
     /**
-     * 選択可能なペンサイズを表現するアイコン。
-     */
-    private Drawable[] mPenSizeImages;
-
-    /**
      * 選択可能なペンサイズの値。
      */
-    private float[] mPenSizeValues;
+    private float mCurrentPenSize;
 
     /**
      * 選択可能な色のラベル配列
@@ -138,13 +114,7 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         /*
          * ペンの色一覧
          */
-        mPenColorLabels = resources.getStringArray(R.array.pen_color_label_list);
         mPenColorValues = resources.getIntArray(R.array.pen_color_value_list);
-        /*
-         * ペンの太さ一覧
-         */
-        mPenSizeValues = toFloatArray(resources.getIntArray(R.array.pen_size_value_list));
-        mPenSizeImages = buildPenSizeDrawables(mPenSizeValues);
 
         /*
          * 背景色一覧
@@ -174,21 +144,45 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         /*
          * ペンカラー変更メニュー項目
          */
-        mPenColorMenuItem = menu.findItem(R.id.menu_pen_color);
-        mPenColorMenuLabelBase = mPenColorMenuItem.getTitle();
-        getCurrentCanvas().applyPenColor();
+        MenuItem penColorMenuItem = menu.findItem(R.id.menu_pen_color);
+        PenConfigActionProvider actionProvider = (PenConfigActionProvider) penColorMenuItem
+                .getActionProvider();
+        actionProvider.setOnColorChangedListener(new OnPenConfigChangedListener() {
+            @Override
+            public void onColorChanged(int index) {
+                getCurrentCanvas().setPenColorIndex(index);
+            }
 
-        /*
-         * ペンサイズ変更メニュー項目
-         */
-        mPenSizeMenuItem = menu.findItem(R.id.menu_pen_size);
-        getCurrentCanvas().applyPenSize();
+            @Override
+            public void onWidthChanged(float width) {
+                mCurrentPenSize = width;
+                getCurrentCanvas().setPenSize(width);
+            }
+        });
+        // とりあえず2番目にしておく
+        getCurrentCanvas().setNextPenColor(mPenColorValues.length);
+
+        mCurrentPenSize = 20f;
+        getCurrentCanvas().setPenSize(mCurrentPenSize);
+
+        //        mPenColorMenuLabelBase = mPenColorMenuItem.getTitle();
+        //        getCurrentCanvas().applyPenColor();
 
         /*
          * 背景色変更メニュー項目
          */
-        mBgColorMenuItem = menu.findItem(R.id.menu_bg_color);
-        mBgColorMenuLabelBase = mBgColorMenuItem.getTitle();
+        //        mBgColorMenuItem = menu.findItem(R.id.menu_bg_color);
+        //        mBgColorMenuLabelBase = mBgColorMenuItem.getTitle();
+        //        getCurrentCanvas().applyBgColor();
+        final MenuItem bgColorMenuItem = menu.findItem(R.id.menu_bg_color);
+        final BgConfigActionProvider bgActionProvider = (BgConfigActionProvider) bgColorMenuItem
+                .getActionProvider();
+        bgActionProvider.setOnColorChangedListener(new OnBgConfigChangedListener() {
+            @Override
+            public void onColorChanged(int index) {
+                getCurrentCanvas().setBgColorIndex(index);
+            }
+        });
         getCurrentCanvas().applyBgColor();
 
         return super.onCreateOptionsMenu(menu);
@@ -199,15 +193,6 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         switch (item.getItemId()) {
             case R.id.menu_swap: /* SWAPメニュー */
                 swapCanvas();
-                return true;
-            case R.id.menu_pen_size: /* ペンサイズメニュー */
-                getCurrentCanvas().setNextPenSize(mPenSizeValues.length);
-                return true;
-            case R.id.menu_pen_color: /* ペン色メニュー */
-                getCurrentCanvas().setNextPenColor(mPenColorValues.length);
-                return true;
-            case R.id.menu_bg_color: /* 背景色メニュー */
-                getCurrentCanvas().setNextBgColor(mBgColorValues.length);
                 return true;
             case R.id.menu_share: /* 共有メニュー */
                 shareImage();
@@ -227,7 +212,7 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     private void refresh() {
         final CanvasFragment currentCanvas = getCurrentCanvas();
         currentCanvas.applyPenColor();
-        currentCanvas.applyPenSize();
+        currentCanvas.setPenSize(mCurrentPenSize);
         currentCanvas.applyBgColor();
         currentCanvas.invalidate();
     }
@@ -249,48 +234,16 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         refresh();
     }
 
-    private Drawable[] buildPenSizeDrawables(float[] sizeArray) {
-        final BitmapDrawable[] result = new BitmapDrawable[sizeArray.length];
-        final int width = 30;
-        final int height = 30;
-        final Paint paint = new Paint();
-        paint.setColor(Color.WHITE);
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setStyle(Paint.Style.FILL);
-        for (int i = 0; i < sizeArray.length; i++) {
-            final float size = sizeArray[i];
-            final Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_4444);
-            final Canvas c = new Canvas(bitmap);
-            c.drawCircle(width / 2, height / 2, size == 0.0 ? 1.0f : size / 2, paint);
-            final BitmapDrawable drawable = new BitmapDrawable(bitmap);
-            result[i] = drawable;
-        }
-        return result;
-    }
-
     /**
      * {@code penColorIndex} が示すペンカラーを反映させます。
      * @param penColorIndex
      */
     public int penColorChanged(int penColorIndex) {
-        if (mPenColorMenuItem != null) {
-            mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[penColorIndex]);
-        }
+        //        if (mPenColorMenuItem != null) {
+        //            mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[penColorIndex]);
+        //        }
         final int argb = mPenColorValues[penColorIndex];
         return argb;
-    }
-
-    /**
-     * {@code penSizeIndex} が示すペンサイズを反映させます。
-     * @param penSizeIndex
-     */
-    public float penSizeChanged(int penSizeIndex) {
-        if (mPenSizeMenuItem != null) {
-            mPenSizeMenuItem.setIcon(mPenSizeImages[penSizeIndex]);
-        }
-        final float penSize = mPenSizeValues[penSizeIndex];
-        return penSize;
     }
 
     /**
@@ -333,17 +286,5 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
             // TODO SCREEN_ORIENTATION_REVERSE_LADSCAPE の判定
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
-    }
-
-    private static float[] toFloatArray(int[] intArray) {
-        if (intArray == null) {
-            return null;
-        }
-        final float[] result = new float[intArray.length];
-        for (int i = 0; i < intArray.length; i++) {
-            final int value = intArray[i];
-            result[i] = (float) value;
-        }
-        return result;
     }
 }

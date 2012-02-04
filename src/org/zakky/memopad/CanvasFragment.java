@@ -42,11 +42,6 @@ public class CanvasFragment extends Fragment {
     private int mPenColorIndex;
 
     /**
-     * 現在のペンサイズのインデックス。{@code mPenSizeImages} と {@code mPenSizeValues}用。
-     */
-    private int mPenSizeIndex;
-
-    /**
      * 現在の背景色のインデックス。{@code mBgColorLabels} と {@code mBgColorValues}用。
      */
     private int mBgColorIndex;
@@ -69,7 +64,6 @@ public class CanvasFragment extends Fragment {
              * １つ目の色をデフォルトの色として選択。 メニューラベル更新の都合があるので、反映は #onStart() で行います。
              */
             mPenColorIndex = 0;
-            mPenSizeIndex = 0;
             mBgColorIndex = 0;
         } else {
             mPaintView.setBitmap(mSavedBitmap);
@@ -101,6 +95,13 @@ public class CanvasFragment extends Fragment {
     }
 
     /**
+     * ペンの色を指定されたインデックスのものに変更します。
+     */
+    public void setPenColorIndex(int index) {
+        applyPenColor(index);
+    }
+
+    /**
      * ペンの色を、反映させます。
      */
     public void applyPenColor() {
@@ -112,22 +113,17 @@ public class CanvasFragment extends Fragment {
     }
 
     /**
-     * ペンのサイズを、次のサイズに変更します。
+     * ペンの色を、反映させます。
      */
-    public void setNextPenSize(int penSizeCount) {
-        mPenSizeIndex++;
-        mPenSizeIndex %= penSizeCount;
-        applyPenSize();
+    private void applyPenColor(int index) {
+        mPenColorIndex = index;
+        applyPenColor();
     }
 
     /**
-     * ペンのサイズを、反映させます。
+     * ペンのサイズを、次のサイズに変更します。
      */
-    public void applyPenSize() {
-        if (mCanvasListener == null) {
-            return;
-        }
-        final float penSize = mCanvasListener.penSizeChanged(mPenSizeIndex);
+    public void setPenSize(float penSize) {
         mPaintView.setPenSize(penSize);
     }
 
@@ -141,6 +137,13 @@ public class CanvasFragment extends Fragment {
     }
 
     /**
+     * ペンの色を指定されたインデックスのものに変更します。
+     */
+    public void setBgColorIndex(int index) {
+        applyBgColor(index);
+    }
+
+    /**
      * 背景の色を反映させます。
      */
     public void applyBgColor() {
@@ -149,6 +152,11 @@ public class CanvasFragment extends Fragment {
         }
         final int bgArgb = mCanvasListener.bgColorChanged(mBgColorIndex);
         mPaintView.setBackgroundColor(bgArgb);
+    }
+
+    public void applyBgColor(int index) {
+        mBgColorIndex = index;
+        applyBgColor();
     }
 
     public void invalidate() {
@@ -176,13 +184,6 @@ interface CanvasListener {
      * @return 次の色の値。
      */
     public int penColorChanged(int penColorIndex);
-
-    /**
-     * ペンのサイズが変更されたことを通知し、インデックスから次のサイズを取得します。
-     * @param penSizeIndex 次のサイズのインデックス。
-     * @return 次のペンサイズ。
-     */
-    public float penSizeChanged(int penSizeIndex);
 
     /**
      * 背景色が変更されたことを通知し、インデックスから次の背景色を取得します。
