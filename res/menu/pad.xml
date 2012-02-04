@@ -3,15 +3,14 @@
     <item android:title="スワップ"
           android:showAsAction="always|withText"
           android:id="@+id/menu_swap"/>
-    <item android:title=""
-          android:showAsAction="always"
-          android:id="@+id/menu_pen_size"/>
     <!-- 色設定 -->
     <item android:title="@string/pen_color"
-          android:showAsAction="always|withText"
+          android:showAsAction="always"
+          android:actionProviderClass="org.zakky.memopad.PenConfigActionProvider"
           android:id="@+id/menu_pen_color"/>
     <item android:title="@string/bg_color"
           android:showAsAction="always|withText"
+          android:actionProviderClass="org.zakky.memopad.BgConfigActionProvider"
           android:id="@+id/menu_bg_color"/>
 
     <item android:title="@string/menu_share"

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <ImageButton
+            android:id="@+id/white"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_margin="6dp"
+            android:layout_weight="1"
+            android:src="@drawable/white" />
+
+        <ImageButton
+            android:id="@+id/black"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_margin="6dp"
+            android:layout_weight="1"
+            android:src="@drawable/black" />
+
+        <ImageButton
+            android:id="@+id/red"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_margin="6dp"
+            android:layout_weight="1"
+            android:src="@drawable/red" />
+
+        <ImageButton
+            android:id="@+id/orange"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_margin="6dp"
+            android:layout_weight="1"
+            android:src="@drawable/orange" />
+
+        <ImageButton
+            android:id="@+id/yellow"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_margin="6dp"
+            android:layout_weight="1"
+            android:src="@drawable/yellow" />
+
+        <ImageButton
+            android:id="@+id/green"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_margin="6dp"
+            android:layout_weight="1"
+            android:src="@drawable/green" />
+
+        <ImageButton
+            android:id="@+id/blue"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_margin="6dp"
+            android:layout_weight="1"
+            android:src="@drawable/blue" />
+
+        <ImageButton
+            android:id="@+id/purple"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_margin="6dp"
+            android:layout_weight="1"
+            android:src="@drawable/purple" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="6dp"
+        android:text="Line width" >
+    </TextView>
+
+    <SeekBar
+        android:id="@+id/pan_width"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="8dp" >
+    </SeekBar>
+
+</LinearLayout>

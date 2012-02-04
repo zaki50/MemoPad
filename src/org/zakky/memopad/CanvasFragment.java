@@ -101,6 +101,13 @@ public class CanvasFragment extends Fragment {
     }
 
     /**
+     * ペンの色を指定されたインデックスのものに変更します。
+     */
+    public void setPenColorIndex(int index) {
+        applyPenColor(index);
+    }
+
+    /**
      * ペンの色を、反映させます。
      */
     public void applyPenColor() {
@@ -109,6 +116,14 @@ public class CanvasFragment extends Fragment {
         }
         final int argb = mCanvasListener.penColorChanged(mPenColorIndex);
         mPaintView.setPenColor(argb);
+    }
+
+    /**
+     * ペンの色を、反映させます。
+     */
+    private void applyPenColor(int index) {
+        mPenColorIndex = index;
+        applyPenColor();
     }
 
     /**
@@ -141,6 +156,13 @@ public class CanvasFragment extends Fragment {
     }
 
     /**
+     * ペンの色を指定されたインデックスのものに変更します。
+     */
+    public void setBgColorIndex(int index) {
+        applyBgColor(index);
+    }
+
+    /**
      * 背景の色を反映させます。
      */
     public void applyBgColor() {
@@ -149,6 +171,11 @@ public class CanvasFragment extends Fragment {
         }
         final int bgArgb = mCanvasListener.bgColorChanged(mBgColorIndex);
         mPaintView.setBackgroundColor(bgArgb);
+    }
+
+    public void applyBgColor(int index) {
+        mBgColorIndex = index;
+        applyBgColor();
     }
 
     public void invalidate() {

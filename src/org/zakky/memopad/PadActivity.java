@@ -16,6 +16,9 @@
 
 package org.zakky.memopad;
 
+import org.zakky.memopad.BgConfigActionProvider.OnBgConfigChangedListener;
+import org.zakky.memopad.PenConfigActionProvider.OnPenConfigChangedListener;
+
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -53,17 +56,12 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     /**
      * ペンカラー変更用のメニューアイテム
      */
-    private MenuItem mPenColorMenuItem;
+    // private MenuItem mPenColorMenuItem;
 
     /**
      * ペンサイズ変更用のメニューアイテム
      */
     private MenuItem mPenSizeMenuItem;
-
-    /**
-     * ペンカラーのメニューラベルのベース部分。後ろに現在のペンカラーを表す文字列を連結して使用します。
-     */
-    private CharSequence mPenColorMenuLabelBase;
 
     /**
      * 背景色変更用のメニューアイテム
@@ -74,11 +72,6 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
      * 背景色のメニューラベルのベース部分。後ろに現在の背景色を表す文字列を連結して使用します。
      */
     private CharSequence mBgColorMenuLabelBase;
-
-    /**
-     * 選択可能な色のラベル配列
-     */
-    private String[] mPenColorLabels;
 
     /**
      * 選択可能な色の値。 {@code mPenColorLabels} と、インデックスで対応づけされる。
@@ -138,8 +131,8 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         /*
          * ペンの色一覧
          */
-        mPenColorLabels = resources.getStringArray(R.array.pen_color_label_list);
         mPenColorValues = resources.getIntArray(R.array.pen_color_value_list);
+
         /*
          * ペンの太さ一覧
          */
@@ -174,21 +167,39 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         /*
          * ペンカラー変更メニュー項目
          */
-        mPenColorMenuItem = menu.findItem(R.id.menu_pen_color);
-        mPenColorMenuLabelBase = mPenColorMenuItem.getTitle();
-        getCurrentCanvas().applyPenColor();
+        MenuItem penColorMenuItem = menu.findItem(R.id.menu_pen_color);
+        PenConfigActionProvider actionProvider = (PenConfigActionProvider) penColorMenuItem
+                .getActionProvider();
+        actionProvider.setOnColorChangedListener(new OnPenConfigChangedListener() {
+            @Override
+            public void onColorChanged(int index) {
+                getCurrentCanvas().setPenColorIndex(index);
+            }
 
-        /*
-         * ペンサイズ変更メニュー項目
-         */
-        mPenSizeMenuItem = menu.findItem(R.id.menu_pen_size);
-        getCurrentCanvas().applyPenSize();
+            @Override
+            public void onWidthChanged(float width) {
+                //getCurrentCanvas().setPenWidth(width);
+            }
+        });
+
+        //        mPenColorMenuLabelBase = mPenColorMenuItem.getTitle();
+        //        getCurrentCanvas().applyPenColor();
 
         /*
          * 背景色変更メニュー項目
          */
-        mBgColorMenuItem = menu.findItem(R.id.menu_bg_color);
-        mBgColorMenuLabelBase = mBgColorMenuItem.getTitle();
+        //        mBgColorMenuItem = menu.findItem(R.id.menu_bg_color);
+        //        mBgColorMenuLabelBase = mBgColorMenuItem.getTitle();
+        //        getCurrentCanvas().applyBgColor();
+        final MenuItem bgColorMenuItem = menu.findItem(R.id.menu_bg_color);
+        final BgConfigActionProvider bgActionProvider = (BgConfigActionProvider) bgColorMenuItem
+                .getActionProvider();
+        bgActionProvider.setOnColorChangedListener(new OnBgConfigChangedListener() {
+            @Override
+            public void onColorChanged(int index) {
+                getCurrentCanvas().setBgColorIndex(index);
+            }
+        });
         getCurrentCanvas().applyBgColor();
 
         return super.onCreateOptionsMenu(menu);
@@ -199,15 +210,6 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         switch (item.getItemId()) {
             case R.id.menu_swap: /* SWAPメニュー */
                 swapCanvas();
-                return true;
-            case R.id.menu_pen_size: /* ペンサイズメニュー */
-                getCurrentCanvas().setNextPenSize(mPenSizeValues.length);
-                return true;
-            case R.id.menu_pen_color: /* ペン色メニュー */
-                getCurrentCanvas().setNextPenColor(mPenColorValues.length);
-                return true;
-            case R.id.menu_bg_color: /* 背景色メニュー */
-                getCurrentCanvas().setNextBgColor(mBgColorValues.length);
                 return true;
             case R.id.menu_share: /* 共有メニュー */
                 shareImage();
@@ -274,9 +276,9 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
      * @param penColorIndex
      */
     public int penColorChanged(int penColorIndex) {
-        if (mPenColorMenuItem != null) {
-            mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[penColorIndex]);
-        }
+        //        if (mPenColorMenuItem != null) {
+        //            mPenColorMenuItem.setTitle(mPenColorMenuLabelBase + mPenColorLabels[penColorIndex]);
+        //        }
         final int argb = mPenColorValues[penColorIndex];
         return argb;
     }
