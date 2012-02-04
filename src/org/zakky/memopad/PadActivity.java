@@ -156,8 +156,15 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     @Override
     protected void onStart() {
         super.onStart();
-        getCurrentCanvas().applyPenColor();
-        getCurrentCanvas().applyBgColor();
+        refresh();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        // save current canvas
+
     }
 
     @Override
@@ -217,6 +224,14 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         return mCanvases[0];
     }
 
+    private void refresh() {
+        final CanvasFragment currentCanvas = getCurrentCanvas();
+        currentCanvas.applyPenColor();
+        currentCanvas.applyPenSize();
+        currentCanvas.applyBgColor();
+        currentCanvas.invalidate();
+    }
+
     private void swapCanvas() {
         final FragmentTransaction tx = getSupportFragmentManager().beginTransaction();
         try {
@@ -231,11 +246,7 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         }
         getSupportFragmentManager().executePendingTransactions();
 
-        final CanvasFragment currentCanvas = getCurrentCanvas();
-        currentCanvas.applyPenColor();
-        currentCanvas.applyPenSize();
-        currentCanvas.applyBgColor();
-        currentCanvas.invalidate();
+        refresh();
     }
 
     private Drawable[] buildPenSizeDrawables(float[] sizeArray) {
