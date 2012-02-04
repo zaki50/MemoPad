@@ -60,7 +60,7 @@ public class MediaUtils {
 	 * @return
 	 */
 	public static Bitmap resizeBitmapForSmartTag(Bitmap src) {
-		return resizeBitamp(src, 200, 96);
+		return resizeBitamp(src, 200, 96, true);
 	}
 
 	/**
@@ -71,7 +71,8 @@ public class MediaUtils {
 	 * @param height
 	 * @return
 	 */
-	public static Bitmap resizeBitamp(Bitmap src, int width, int height) {
+	public static Bitmap resizeBitamp(Bitmap src, int width, int height,
+			boolean autoRotate) {
 
 		int srcWidth = src.getWidth(); // 元画像のwidth
 		int srcHeight = src.getHeight(); // 元画像のheight
@@ -85,6 +86,12 @@ public class MediaUtils {
 			matrix.postScale(heightScale, heightScale);
 		} else {
 			matrix.postScale(widthScale, widthScale);
+		}
+
+		// 回転
+		if (autoRotate && (srcHeight > srcWidth && width > height)
+				|| (srcWidth > srcHeight && height > width)) {
+			matrix.postRotate(90);
 		}
 
 		// リサイズ
