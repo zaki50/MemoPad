@@ -23,13 +23,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -59,11 +52,6 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     // private MenuItem mPenColorMenuItem;
 
     /**
-     * ペンサイズ変更用のメニューアイテム
-     */
-    private MenuItem mPenSizeMenuItem;
-
-    /**
      * 背景色変更用のメニューアイテム
      */
     private MenuItem mBgColorMenuItem;
@@ -79,14 +67,9 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     private int[] mPenColorValues;
 
     /**
-     * 選択可能なペンサイズを表現するアイコン。
-     */
-    private Drawable[] mPenSizeImages;
-
-    /**
      * 選択可能なペンサイズの値。
      */
-    private float[] mPenSizeValues;
+    private float mCurrentPenSize;
 
     /**
      * 選択可能な色のラベル配列
@@ -134,12 +117,6 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         mPenColorValues = resources.getIntArray(R.array.pen_color_value_list);
 
         /*
-         * ペンの太さ一覧
-         */
-        mPenSizeValues = toFloatArray(resources.getIntArray(R.array.pen_size_value_list));
-        mPenSizeImages = buildPenSizeDrawables(mPenSizeValues);
-
-        /*
          * 背景色一覧
          */
         mBgColorLabels = resources.getStringArray(R.array.bg_color_label_list);
@@ -178,9 +155,15 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
 
             @Override
             public void onWidthChanged(float width) {
-                //getCurrentCanvas().setPenWidth(width);
+                mCurrentPenSize = width;
+                getCurrentCanvas().setPenSize(width);
             }
         });
+        // とりあえず2番目にしておく
+        getCurrentCanvas().setNextPenColor(mPenColorValues.length);
+
+        mCurrentPenSize = 20f;
+        getCurrentCanvas().setPenSize(mCurrentPenSize);
 
         //        mPenColorMenuLabelBase = mPenColorMenuItem.getTitle();
         //        getCurrentCanvas().applyPenColor();
@@ -229,7 +212,7 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
     private void refresh() {
         final CanvasFragment currentCanvas = getCurrentCanvas();
         currentCanvas.applyPenColor();
-        currentCanvas.applyPenSize();
+        currentCanvas.setPenSize(mCurrentPenSize);
         currentCanvas.applyBgColor();
         currentCanvas.invalidate();
     }
@@ -251,26 +234,6 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         refresh();
     }
 
-    private Drawable[] buildPenSizeDrawables(float[] sizeArray) {
-        final BitmapDrawable[] result = new BitmapDrawable[sizeArray.length];
-        final int width = 30;
-        final int height = 30;
-        final Paint paint = new Paint();
-        paint.setColor(Color.WHITE);
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setStyle(Paint.Style.FILL);
-        for (int i = 0; i < sizeArray.length; i++) {
-            final float size = sizeArray[i];
-            final Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_4444);
-            final Canvas c = new Canvas(bitmap);
-            c.drawCircle(width / 2, height / 2, size == 0.0 ? 1.0f : size / 2, paint);
-            final BitmapDrawable drawable = new BitmapDrawable(bitmap);
-            result[i] = drawable;
-        }
-        return result;
-    }
-
     /**
      * {@code penColorIndex} が示すペンカラーを反映させます。
      * @param penColorIndex
@@ -281,18 +244,6 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
         //        }
         final int argb = mPenColorValues[penColorIndex];
         return argb;
-    }
-
-    /**
-     * {@code penSizeIndex} が示すペンサイズを反映させます。
-     * @param penSizeIndex
-     */
-    public float penSizeChanged(int penSizeIndex) {
-        if (mPenSizeMenuItem != null) {
-            mPenSizeMenuItem.setIcon(mPenSizeImages[penSizeIndex]);
-        }
-        final float penSize = mPenSizeValues[penSizeIndex];
-        return penSize;
     }
 
     /**
@@ -335,17 +286,5 @@ public class PadActivity extends FragmentActivity implements CanvasListener {
             // TODO SCREEN_ORIENTATION_REVERSE_LADSCAPE の判定
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
-    }
-
-    private static float[] toFloatArray(int[] intArray) {
-        if (intArray == null) {
-            return null;
-        }
-        final float[] result = new float[intArray.length];
-        for (int i = 0; i < intArray.length; i++) {
-            final int value = intArray[i];
-            result[i] = (float) value;
-        }
-        return result;
     }
 }

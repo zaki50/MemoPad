@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.PopupWindow;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class PenConfigActionProvider extends ActionProvider {
     @SuppressWarnings("unused")
@@ -33,7 +35,7 @@ public class PenConfigActionProvider extends ActionProvider {
 
         mLayoutInflater = LayoutInflater.from(context);
 
-        View v = mLayoutInflater.inflate(R.layout.color_popup, null, false);
+        View v = mLayoutInflater.inflate(R.layout.pen_popup, null, false);
 
         //        mColorPicker = (HsvColorPickerView) v.findViewById(R.id.color_picker);
         //        mColorPicker.showPreview(true);
@@ -127,6 +129,30 @@ public class PenConfigActionProvider extends ActionProvider {
                 }
             }
         });
+
+        final SeekBar bar = (SeekBar) v.findViewById(R.id.pen_width);
+        bar.setMax(100);
+        bar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        if (mListener == null) {
+                            return;
+                        }
+
+                        final int value = seekBar.getProgress();
+                        final float size = 10.f + value / 4f;
+                        mListener.onWidthChanged(size);
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    }
+                });
+        bar.setProgress(40);
 
         mPopupWindow = new PopupWindow(v);
         mPopupWindow
