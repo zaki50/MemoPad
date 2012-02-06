@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.net.Uri;
+import android.util.Log;
 
 /**
  * 画像アップローダー<br>
@@ -28,9 +29,10 @@ public class MediaUtils {
 	 */
 	public static Intent createUploadIntent(Uri contentUri) {
 		Intent intent = new Intent(ACTION_UPLOAD);
-//		intent.addCategory(Intent.CATEGORY_DEFAULT);
+		Log.v("TEST", "UploadIntent by uri:" + contentUri);
+		intent.setType("image/jpeg");
 		intent.setData(contentUri);
-		intent.setType("image/png");
+		intent.putExtra("jp.r246.twicca.USER_SCREEN_NAME", "b0ner_jp");
 		return intent;
 	}
 
