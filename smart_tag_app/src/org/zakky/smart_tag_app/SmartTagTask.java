@@ -11,8 +11,10 @@ public class SmartTagTask extends AsyncTask<Void, Void, Void> {
     
     private static SmartTag mSmartTag;
     private static Context mContext;
+    private static SmartTagAppActivity mActivity;
     
-    public SmartTagTask(Context context, SmartTag smartTag){
+    public SmartTagTask(SmartTagAppActivity activity,Context context, SmartTag smartTag){
+        mActivity = activity;
         mContext = context;
         mSmartTag = smartTag;
     }
@@ -23,7 +25,6 @@ public class SmartTagTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... params) {
-        Log.v("TEST","SmartTagTask doInBackground");
         mSmartTag.startSession();
         return null;
     }
@@ -42,18 +43,16 @@ public class SmartTagTask extends AsyncTask<Void, Void, Void> {
         }else{
 
             int function = mSmartTag.getFunctionNo();
-            if(function == SmartTag.FN_CHANGE_LAYOUT){
-                //次の番号に切り替える
-            }else if(function == SmartTag.FN_READ_DATA){
-                //URLを開く
-                //openUrl(mSmartTag.getReadText());
-                //showAlert(mSmartTag.getReadText());
+            
+            if (function == SmartTag.FN_DRAW_CAMERA_IMAGE) {
+                mActivity.writeUrlTag();
+                Toast.makeText(mContext, "画像を書き込んだお",
+                        Toast.LENGTH_SHORT).show();
+            } else if (function == SmartTag.FN_WRITE_DATA) {
+                Toast.makeText(mContext, "URLを書き込んだお",
+                        Toast.LENGTH_LONG).show();
             }
 
-
         }
-        Log.v("TEST","onPostExecute");
-        Toast.makeText(mContext, "そうしんしたよ！",
-                Toast.LENGTH_LONG).show();
     }
 }

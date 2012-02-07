@@ -2,6 +2,8 @@ package org.zakky.smart_tag_app;
 
 import java.io.InputStream;
 
+import com.aioisystems.imaging.DisplayPainter;
+
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -20,7 +22,7 @@ import android.util.Log;
 public class MediaUtils {
 
 	private static final String ACTION_UPLOAD = "jp.r246.twicca.ACTION_UPLOAD";
-
+	
 	/**
 	 * アップロードのIntentを作成
 	 * 
@@ -29,12 +31,32 @@ public class MediaUtils {
 	 */
 	public static Intent createUploadIntent(Uri contentUri) {
 		Intent intent = new Intent(ACTION_UPLOAD);
-		Log.v("TEST", "UploadIntent by uri:" + contentUri);
 		intent.setType("image/jpeg");
 		intent.setData(contentUri);
-		intent.putExtra("jp.r246.twicca.USER_SCREEN_NAME", "b0ner_jp");
+		intent.putExtra("jp.r246.twicca.USER_SCREEN_NAME", "");
 		return intent;
 	}
+	
+	/**
+     * スマートタグタメのBitmapを作成
+     * 
+     * @param bitmap
+     * @return orientation
+     */
+    public static Bitmap editBitmapForTag(Bitmap bitmap, int orientation) {
+        Bitmap newBitmap = bitmap;
+        if (orientation == 1) {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(-90);
+            newBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+                    bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        }
+        DisplayPainter painter = new DisplayPainter();
+        painter.putImage(newBitmap, 0, 0, true);
+        newBitmap.recycle();
+        newBitmap = painter.getPreviewImage();
+        return newBitmap;
+    }
 
 	/**
 	 * UriからBitmapを取得
